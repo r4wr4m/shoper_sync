@@ -332,6 +332,8 @@ def compare_sets(name_dict1,name_dict2,verbose=True):
     equal = True
     for product in name_dict1:
         if name_dict1[product]['is_set']:
+        	print(sorted(name_dict1[product]['children']))
+        	print(sorted(name_dict2[product]['children']))
             if not compare_lists(name_dict1[product]['children'],name_dict2[product]['children']):
                 equal=False
                 if verbose:
