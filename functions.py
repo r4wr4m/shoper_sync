@@ -1,4 +1,4 @@
-import sys,requests,re,json,time,pickle,time,os
+import sys,requests,re,json,time,pickle,time,os,sys
 from math import ceil
 from creds import pages #pages=[['domain','user','pass','token'], ['','','','']]
 from colorama import Fore, init 
@@ -18,6 +18,8 @@ else:
     proxies = {}
     verify=True
 
+products_per_request = 50   #MAX 50 (https://developers.shoper.pl/developers/api/resources/products/list)
+requests_per_bulk = 25  #MAX 25 (https://developers.shoper.pl/developers/api/bulk)
 #############################################
 ################## LOGIN ####################
 #############################################
@@ -58,10 +60,13 @@ def extract_data(text,availabilities,deliveries): #returns list [{'id':id,'name'
             availability_id=product['stock']['availability_id'] #DIFFERENT IDS ON PAGES
             is_set=False
             children=[]
+            children_quantities_in_set=[]
             if 'children' in product.keys():
                 is_set=True
+
                 for child in product['children']:
                     children.append(int(child['product_id']))
+                    children_quantities_in_set.append(int(child['stock']))
 
             if availability_id==None:
                 availability_name='null'
@@ -82,16 +87,14 @@ def extract_data(text,availabilities,deliveries): #returns list [{'id':id,'name'
                 'delivery_id':delivery_id,
                 'availability_id':availability_id,
                 'is_set':is_set,
-                'children':children
+                'children':children,
+                'children_quantities_in_set':children_quantities_in_set
                 })
     return products
 
 def api_get_products(page,token,availabilities,deliveries,active_only=False): #returns list of products [{'id':id,'name':name,...},...]
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
     print(Fore.GREEN+'[+] Downloading product information from: '+ page)
-
-    products_per_request = 50   #MAX 50 (https://developers.shoper.pl/developers/api/resources/products/list)
-    requests_per_bulk = 25  #MAX 25 (https://developers.shoper.pl/developers/api/bulk)
 
     #Grabing info about pages
     try:
@@ -168,7 +171,6 @@ def get_key(dictionary,value): #returns key of given value in dictionary
     print(Fore.RED+'[-] Error: There is no value {} in dictionary {}'.format(value,dictionary))
     sys.exit(1)
 
-
 def save_products(products,filename):
     if not os.path.isdir('data'):
         os.mkdir('data')
@@ -186,7 +188,7 @@ def load_products(filename):
 def print_pretty_json(text):
     print(json.dumps(json.loads(text), indent=2))
 
-def load_data(active_only=False,from_file=False):
+def load_data(from_file=False,active_only=False):
     start = time.time()
     print(Fore.BLUE+'###################\nLOADING DATA\n###################')
 
@@ -302,6 +304,8 @@ def diff(name_dict1,name_dict2,attribute,common_only=False,verbose=True): #retur
     return diffs
 
 def compare_products(products1,products2,name_dict1,name_dict2,page1,page2,availabilities1,availabilities2,deliveries1,deliveries2,attributes,verbose,print_details):
+    if verbose:
+        print(Fore.BLUE+'###################\nCOMPARING DATA ({}|{})\n###################'.format(page1,page2))
     tests=[]
     tests.append(['Equal product quantities:',compare_product_quantities(products1,products2,page1,page2,print_details)])
     tests.append(['Equal product names:',compare_dictionary_names(name_dict1,name_dict2,page1,page2,'products',print_details)])
@@ -332,16 +336,51 @@ def compare_sets(name_dict1,name_dict2,verbose=True):
     equal = True
     for product in name_dict1:
         if name_dict1[product]['is_set']:
-        	print(sorted(name_dict1[product]['children']))
-        	print(sorted(name_dict2[product]['children']))
-            if not compare_lists(name_dict1[product]['children'],name_dict2[product]['children']):
+            names1=[]
+            names2=[]
+            for child_id in name_dict1[product]['children']: #converting children ids to names
+                for name in name_dict1:
+                    if child_id == name_dict1[name]['id']:
+                        names1.append(name)
+                        break
+            for child_id in name_dict2[product]['children']: #converting children ids to names
+                for name in name_dict2:
+                    if child_id == name_dict2[name]['id']:
+                        names2.append(name)
+                        break
+            if not compare_lists(names1,names2):
                 equal=False
                 if verbose:
                     print('Not equal set:',product)
     return equal
 
 def compare_lists(list1,list2):
+    if len(list1)!=len(list2):
+        return False
     return sorted(list1) == sorted(list2)
+
+def print_sets_of_products(products1,products2,name1,name2): #prints sets and stocks of products
+    
+    print(Fore.BLUE+'###################\nSets in {}\n###################'.format(name1))
+    for product in products1:
+        if product['is_set']:
+            print(Fore.BLUE+product['stock'] + ' ' + product['name'])
+            for child_id in product['children']:
+                for p in products1:
+                    if child_id == p['id']:
+                     child_name=p['name']
+                     child_quantity = product['children_quantities_in_set'][product['children'].index(child_id)]
+                     print('\t'+p['stock'],child_name,Fore.BLUE+'('+str(child_quantity)+' in set)')
+    print(Fore.BLUE+'###################\nSets in {}\n###################'.format(name2))
+    for product in products2:
+        if product['is_set']:
+            print(Fore.BLUE+product['stock'] + ' ' + product['name'])
+            for child_id in product['children']:
+                for p in products2:
+                    if child_id == p['id']:
+                     child_name=p['name']
+                     child_quantity = product['children_quantities_in_set'][product['children'].index(child_id)]
+                     print('\t'+p['stock'],child_name,Fore.BLUE+'('+str(child_quantity)+' in set)')
 
 #############################################
 ############# UPDATING PRODUCTS #############

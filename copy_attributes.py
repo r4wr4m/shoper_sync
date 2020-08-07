@@ -1,9 +1,21 @@
 from functions import *
 start = time.time()
-products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file=False) #load_data(active_only=False,from_file=False)
+
+from_file=False
+active_only=False
+change=False
+
+if 'offline' in sys.argv:
+    from_file=True
+if 'active' in sys.argv:
+    active_only=True
+if 'change' in sys.argv:
+    change=True
+print_only=not change
+
+products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
 
 #Settings
-print_only=True
 
 print(Fore.BLUE+'###################\nCOPYING ATTRIBUTES FROM {} TO {}\n###################'.format(pages[0][0],pages[1][0]))
 changes=0
