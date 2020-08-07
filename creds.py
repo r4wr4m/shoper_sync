@@ -1,4 +1,0 @@
-pages=[
-        ['domain','user','password',''],
-        ['','','','']
-      ]
