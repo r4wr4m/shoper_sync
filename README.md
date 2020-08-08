@@ -5,9 +5,13 @@ Script description
 1. Install Python 3 
 2. Download repository
 3. Install requirements (python -m pip install -r requirements.txt)
-4. Fill the credentials in creds.py
+4. Provide shops information in creds.py
 
 ## Usage
+
+### Comparing product information
 python compare.py
-python copy_attributes.py (copies attributes from pages[0] to pages[1] (creds.py))
+### Copying product information from one shop to the other
+python copy_attributes.py
+### Synchronizing stock information between shops
 python sync_stock.py
