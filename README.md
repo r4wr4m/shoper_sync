@@ -11,17 +11,21 @@ Script description
 
 ### Comparing product information
 python compare.py [options]
+
 Available options:
 * Option1
 * Option2
 
 ### Copying product information from one shop to the other
 python copy_attributes.py [options]
+
 Available options:
 * Option1
 * Option2
+
 ### Synchronizing stock information between shops
 python sync_stock.py [options]
+
 Available options:
 * Option1
 * Option2
