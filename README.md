@@ -4,7 +4,7 @@ Works on Windows and Linux.
 
 ## Installation
 1. Install Python 3 
-2. Download repository (git clone https://github.com/r4wr4m/shoper_sync.git or just download https://github.com/r4wr4m/shoper_sync/archive/master.zip)
+2. Download repository (git clone https://github.com/r4wr4m/shoper_sync.git or just download [zip_file](https://github.com/r4wr4m/shoper_sync/archive/master.zip "repo"))
 3. Install requirements (python -m pip install -r requirements.txt)
 4. Provide shops information in creds.py
 
