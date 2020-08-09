@@ -20,7 +20,7 @@ Available options:
 * sets - print information about sets of products
 
 ### Copying product information from one shop to the other
-> python copy_attributes.py [options]
+```python copy_attributes.py [options]```
 
 Available options:
 * offline - read product information from file (product information file is saved automatically)
