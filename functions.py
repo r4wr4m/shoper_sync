@@ -19,14 +19,18 @@ else:
     verify=True
 
 products_per_request = 50   #MAX 50 (https://developers.shoper.pl/developers/api/resources/products/list)
-requests_per_bulk = 25  #MAX 25 (https://developers.shoper.pl/developers/api/bulk)
+requests_per_bulk = 25  #MAX 25 (https://developers.shoper.pl/developers/api/bulk) 
 #############################################
 ################## LOGIN ####################
 #############################################
 def api_login(page,usr,pwd): #returns token
     creds={'client_id':usr, 'client_secret': pwd}
     headers = {'User-Agent': ua}
-    login=requests.post('https://'+page+'/webapi/rest/auth',data=creds,headers=headers,proxies=proxies,verify=verify).text
+    try:
+        login=requests.post('https://'+page+'/webapi/rest/auth',data=creds,headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
     if len(re.findall('access_token":"(.{40})"' ,login))>0:
         token=re.findall('access_token":"(.{40})"' ,login)[0]
         print(Fore.GREEN+'[+] Logged into: '+page)
@@ -53,7 +57,7 @@ def extract_data(text,availabilities,deliveries): #returns list [{'id':id,'name'
         for product in item['body']['list']: #for products in single response
             id=int(product['product_id'])
             name=product['translations']['pl_PL']['name']
-            stock=product['stock']['stock']
+            stock=int(product['stock']['stock'])
             active=product['translations']['pl_PL']['active']
             price=product['stock']['price']
             delivery_id=product['stock']['delivery_id'] #DIFFERENT IDS ON PAGES
@@ -94,11 +98,16 @@ def extract_data(text,availabilities,deliveries): #returns list [{'id':id,'name'
 
 def api_get_products(page,token,availabilities,deliveries,active_only=False): #returns list of products [{'id':id,'name':name,...},...]
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
-    print(Fore.GREEN+'[+] Downloading product information from: '+ page)
-
+    total_data_size=0
+    print(Fore.GREEN+'[+] Downloading product information from '+ page)
     #Grabing info about pages
     try:
-        j = json.loads(requests.get('https://'+page+'/webapi/rest/product-stocks?limit={}&page=99999'.format(products_per_request),headers=headers,proxies=proxies,verify=verify).text)
+        text=requests.get('https://'+page+'/webapi/rest/product-stocks?limit={}&page=99999'.format(products_per_request),headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)    
+    try:
+        j = json.loads(text)
         count=j['count']
         pages=j['pages']
     except:
@@ -110,7 +119,8 @@ def api_get_products(page,token,availabilities,deliveries,active_only=False): #r
     products=[]
 
     for i in range(requests_count):
-        print('[i] {}\t{}/{}'.format(page,i+1,requests_count))
+        print('[i] {}\t{}/{} '.format(page,i+1,requests_count),end="")
+        data_size=0
         request_body='['
         for j in range(requests_per_bulk):
             #downloading info about 25*50 products at once (25 requests in bulk, 50 products in one request
@@ -123,8 +133,17 @@ def api_get_products(page,token,availabilities,deliveries,active_only=False): #r
                 #request_body+='{"id": "products","path": "/webapi/rest/product-stocks","method": "GET","params": {"limit": "50","page": ' + str(page_number) + '}},' #response ~840kB, doesn't contain names
         request_body=request_body.rstrip(',')
         request_body+=']'
-        text = requests.post('https://'+page+'/webapi/rest/bulk',data=request_body,headers=headers,proxies=proxies,verify=verify).text
+        data_size+=len(request_body)
+        try:
+            text = requests.post('https://'+page+'/webapi/rest/bulk',data=request_body,headers=headers,proxies=proxies,verify=verify).text
+        except Exception as e:
+            print(Fore.RED+'[!] Connection error: ' + str(e))
+            sys.exit(1)
+        data_size += len(text)
         products += extract_data(text,availabilities,deliveries)
+        print(Fore.GREEN + '(~' + str(round(data_size/1024/1024,3)) +'MB)')
+        total_data_size+=data_size
+    print('[+] Total data transfered: ~{}MB ({})'.format(str(round(total_data_size/1024/1024,3)),page))
     return products         
 
 def create_name_dict(products,page): #creates product name dictionary {name:{'id':id,'stock':stock,'active':active},...} (Duplicated products are removed)
@@ -141,11 +160,19 @@ def create_name_dict(products,page): #creates product name dictionary {name:{'id
     return dictionary
 
 def get_availabilities(page,token): #returns availabilities dictionary {name:id, ...}
-    print(Fore.GREEN+'[+] Downloading availabilities information from: '+ page)
+    print(Fore.GREEN+'[+] Downloading availabilities information from '+ page)
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
     dictionary={'null':'null'} #availability_id can be null
-    #try:    
-    j = json.loads(requests.get('https://'+page+'/webapi/rest/availabilities',headers=headers,proxies=proxies,verify=verify).text)
+    try:
+        text = requests.get('https://'+page+'/webapi/rest/availabilities',headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+    try:    
+        j = json.loads(text)
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
     for availability in j['list']: 
         availability_id=availability['availability_id']
         name=availability['translations']['pl_PL']['name']
@@ -153,11 +180,19 @@ def get_availabilities(page,token): #returns availabilities dictionary {name:id,
     return dictionary
 
 def get_deliveries(page,token): #returns deliveries dictionary {name:id, ...}
-    print(Fore.GREEN+'[+] Downloading deliveries information from: '+ page)
+    print(Fore.GREEN+'[+] Downloading deliveries information from '+ page)
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
     dictionary={'null':'null'} #delivery_id can be null
-    #try:    
-    j = json.loads(requests.get('https://'+page+'/webapi/rest/deliveries',headers=headers,proxies=proxies,verify=verify).text)
+    try:
+        text = requests.get('https://'+page+'/webapi/rest/deliveries',headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+    try:
+        j = json.loads(text)
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
     for delivery in j['list']: 
         delivery_id=delivery['delivery_id']
         name=delivery['translations']['pl_PL']['name']
@@ -190,7 +225,7 @@ def print_pretty_json(text):
 
 def load_data(from_file=False,active_only=False):
     start = time.time()
-    print(Fore.BLUE+'###################\nLOADING DATA\n###################')
+    print(Fore.BLUE+'###################\nLOADING DATA ({} {})\n###################'.format(pages[0][0],pages[1][0]))
 
     if not from_file:
         pages[0][3] = api_login(pages[0][0],pages[0][1],pages[0][2]) #TOKEN1
@@ -318,7 +353,6 @@ def compare_products(products1,products2,name_dict1,name_dict2,page1,page2,avail
 
     for attribute in attributes:    
             tests.append(['Values of ' +attribute+ ' attribute: ',not bool(diff(name_dict1,name_dict2,attribute,False,print_details))])
-    
     if verbose:
         for i in tests:
             if i[1]:
@@ -360,27 +394,48 @@ def compare_lists(list1,list2):
     return sorted(list1) == sorted(list2)
 
 def print_sets_of_products(products1,products2,name1,name2): #prints sets and stocks of products
-    
     print(Fore.BLUE+'###################\nSets in {}\n###################'.format(name1))
     for product in products1:
         if product['is_set']:
-            print(Fore.BLUE+product['stock'] + ' ' + product['name'])
-            for child_id in product['children']:
+            children=[]
+            lowest_stock=999999
+            for child_id in product['children']: #extract children data
                 for p in products1:
                     if child_id == p['id']:
-                     child_name=p['name']
-                     child_quantity = product['children_quantities_in_set'][product['children'].index(child_id)]
-                     print('\t'+p['stock'],child_name,Fore.BLUE+'('+str(child_quantity)+' in set)')
+                        children.append([
+                        p['name'], #child name
+                        product['children_quantities_in_set'][product['children'].index(child_id)], #quantity in set
+                        p['stock'] #child stock
+                        ])
+                        if int(p['stock']) < lowest_stock:
+                            lowest_stock = int(p['stock'])
+            if int(product['stock']) < lowest_stock:
+                print(Fore.RED+str(product['stock']) + ' ' + product['name'] +' (Set stock lower than product stocks)')
+            else:
+                print(Fore.BLUE+str(product['stock']) + ' ' + product['name'])
+            for child in children:
+                print('\t'+str(child[2]),child[0],Fore.BLUE + '('+str(child[1])+' in set)')
     print(Fore.BLUE+'###################\nSets in {}\n###################'.format(name2))
     for product in products2:
         if product['is_set']:
-            print(Fore.BLUE+product['stock'] + ' ' + product['name'])
-            for child_id in product['children']:
+            children=[]
+            lowest_stock=999999
+            for child_id in product['children']: #extract children data
                 for p in products2:
                     if child_id == p['id']:
-                     child_name=p['name']
-                     child_quantity = product['children_quantities_in_set'][product['children'].index(child_id)]
-                     print('\t'+p['stock'],child_name,Fore.BLUE+'('+str(child_quantity)+' in set)')
+                        children.append([
+                        p['name'], #child name
+                        product['children_quantities_in_set'][product['children'].index(child_id)], #quantity in set
+                        p['stock'] #child stock
+                        ])
+                        if int(p['stock']) < lowest_stock:
+                            lowest_stock = int(p['stock'])
+            if int(product['stock']) < lowest_stock:
+                print(Fore.RED+str(product['stock']) + ' ' + product['name'] +' (Set stock lower than product stocks)')
+            else:
+                print(Fore.BLUE+str(product['stock']) + ' ' + product['name'])
+            for child in children:
+                print('\t'+str(child[2]),child[0],Fore.BLUE + '('+str(child[1])+' in set)') 
 
 #############################################
 ############# UPDATING PRODUCTS #############
@@ -397,7 +452,11 @@ def update_value(page,token,id,field,value):
             }
     text=''
     for i in range(3):
-        r = requests.put('https://'+page+'/webapi/rest/products/'+str(id),data=fields[field],headers=headers,proxies=proxies,verify=verify)
+        try:
+            r = requests.put('https://'+page+'/webapi/rest/products/'+str(id),data=fields[field],headers=headers,proxies=proxies,verify=verify)
+        except Exception as e:
+            print(Fore.RED+'[!] Connection error: ' + str(e))
+            sys.exit(1)
         if r.status_code == 200:
             text=r.text
             break
@@ -435,3 +494,22 @@ def copy_attribute(page1,page2,name_dict1,name_dict2,attribute,print_only=True,i
                         print(Fore.RED + ' (IS SET, UPDATE PRODUCTS IN SET FIRST)',end='')
                     print(Fore.RED + ' ERROR')
     return len(diffs)
+    
+def create_past_data(filename,from_file,active_only):
+    products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
+    equal = compare_products(products[0],products[1],name_dict1,name_dict2,pages[0][0],pages[1][0],availabilities[0],availabilities[1],deliveries[0],deliveries[1],['active','stock','price','availability_name','delivery_name'],True,False)
+    if equal: #CREATE PAST DATA
+        save_products((products[0],availabilities[0],deliveries[0]),filename)
+        print(Fore.GREEN+'[+] Products information is synchronized, file data/{} created'.format(filename))
+    else: #EXIT
+        print(Fore.RED+'[-] Products information is not synchronized, cannot create file data/{}'.format(filename))
+    print('[i] Exiting')
+    sys.exit(1)
+
+def delete_past_data(filename):
+    if os.path.isfile('data/'+filename):
+        os.remove('data/'+filename)
+        print(Fore.GREEN+'[+] Past data (data/{}) deleted'.format(filename))
+    else:
+        print(Fore.RED+'[-] Past data (data/{}) doesn\'t exist'.format(filename))
+    sys.exit(1)
