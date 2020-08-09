@@ -11,7 +11,7 @@ Script description
 
 ### Comparing product information
 Script compares product information in two shops (quantities, names, availabilities, deliveries, sets of products, product duplicated names, attributes: active, stock, price, availability, delivery).
-> python compare.py [options]
+> ```python compare.py [options]```
 
 Available options:
 * offline - read product information from file (product information file is saved automatically)
