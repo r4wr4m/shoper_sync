@@ -500,9 +500,9 @@ def create_past_data(filename,from_file,active_only):
     equal = compare_products(products[0],products[1],name_dict1,name_dict2,pages[0][0],pages[1][0],availabilities[0],availabilities[1],deliveries[0],deliveries[1],['active','stock','price','availability_name','delivery_name'],True,False)
     if equal: #CREATE PAST DATA
         save_products((products[0],availabilities[0],deliveries[0]),filename)
-        print(Fore.GREEN+'[+] Products information is synchronized, file data/{} created'.format(filename))
+        print(Fore.GREEN+'###################\n[+] Products information is synchronized, file data/{} created'.format(filename))
     else: #EXIT
-        print(Fore.RED+'[-] Products information is not synchronized, cannot create file data/{}'.format(filename))
+        print(Fore.RED+'###################\n[-] Products information is not synchronized, cannot create file data/{}'.format(filename))
     print('[i] Exiting')
     sys.exit(1)
 
@@ -513,3 +513,19 @@ def delete_past_data(filename):
     else:
         print(Fore.RED+'[-] Past data (data/{}) doesn\'t exist'.format(filename))
     sys.exit(1)
+
+def change_stock(past_products,name_dict,product_name,page,old_value,new_value,change):
+    print('[i] Changing product {} in {} {} attribute: {}->{}'.format(product_name,page[0],'stock',old_value,new_value),end='')
+    if change:
+        if update_value(page[0],page[3],name_dict[product_name]['id'],'stock',str(new_value)):
+            print(Fore.GREEN + ' DONE')
+            for product in past_products: #update past_products
+                if product['name']==product_name:
+                    product['stock']=new_value
+            return True
+        else:
+            print(Fore.RED + ' ERROR')
+            return False
+    else:
+        print('')
+        return False

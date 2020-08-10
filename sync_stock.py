@@ -54,95 +54,30 @@ if stock1_stockp and stock2_stockp and stock1_stock2: #STOCKS INFORMATION SYNCED
 else:
     print(Fore.RED+'[-] Stock information is not synchronized')
 
-data_updated = False
+#SYNCHRONIZING STOCKS INFORMATION
+data_updated = True
 for name in past_name_dict:
     stock1=name_dict1[name]['stock']
     stock2=name_dict2[name]['stock']
     stockp=past_name_dict[name]['stock']
     if (stock1 < stockp) and (stock2 < stockp): #ORDERS IN BOTH SHOPS
         stock = stockp - (stockp-stock1) - (stockp-stock2)
-        print('[i] Orders in both shops (stock in the past: {})'.format(stockp))
+        print(Fore.YELLOW + '[i] Orders in both shops - product: {} (stock in the past: {})'.format(name,stockp))
         if stock >=0:
-            print('[i] Changing product {} in {} {} attribute: {}->{}'.format(name,pages[0][0],'stock',stock1,stock),end='')
-            if change:
-                if update_value(pages[0][0],pages[0][3],name_dict1[name]['id'],'stock',stock):
-                    print(Fore.GREEN + ' DONE')
-                    for product in past_products: #update past_products
-                        if product['name']==name:
-                            product['stock']=stock
-                    data_updated=True
-                else:
-                    print(Fore.RED + ' ERROR')
-            else:
-                print('') 
-            print('[i] Changing product {} in {} {} attribute: {}->{}'.format(name,pages[1][0],'stock',stock2,stock),end='')
-            if change:
-                if update_value(pages[1][0],pages[1][3],name_dict2[name]['id'],'stock',stock):
-                    print(Fore.GREEN + ' DONE')
-                    for product in past_products: #update past_products
-                        if product['name']==name:
-                            product['stock']=stock
-                    data_updated=True
-                else:
-                    print(Fore.RED + ' ERROR')
-            else:
-                print('')   
+            data_updated = data_updated and change_stock(past_products,name_dict1,name,pages[0],stock1,stock,change)
+            data_updated = data_updated and change_stock(past_products,name_dict2,name,pages[1],stock2,stock,change)
         else:
-            print(Fore.RED + '[!] ERROR: Sold more than in stock!!!')
+            print(Fore.RED + '[!] ERROR: Sold more than in stock ({})!!! (product: {})'.format(stock,name))
             print('[i] Clearing stocks')
             #CLEARING STOCKS
-            print('[i] Changing product {} in {} {} attribute: {}->{}'.format(name,pages[1][0],'stock',stock2,0),end='')
-            if change:
-                if update_value(pages[1][0],pages[1][3],name_dict2[name]['id'],'stock',0):
-                    print(Fore.GREEN + ' DONE')
-                    for product in past_products: #update past_products
-                        if product['name']==name:
-                            product['stock']=0
-                    data_updated=True
-                else:
-                    print(Fore.RED + ' ERROR')
-            else:
-                print('')
-            print('[i] Changing product {} in {} {} attribute: {}->{}'.format(name,pages[0][0],'stock',stock1,0),end='')
-            if change:
-                if update_value(pages[0][0],pages[0][3],name_dict1[name]['id'],'stock',0):
-                    print(Fore.GREEN + ' DONE')
-                    for product in past_products: #update past_products
-                        if product['name']==name:
-                            product['stock']=0
-                    data_updated=True
-                else:
-                    print(Fore.RED + ' ERROR')
-            else:
-                print('')            
+            data_updated = data_updated and change_stock(past_products,name_dict1,name,pages[0],stock1,0,change)
+            data_updated = data_updated and change_stock(past_products,name_dict2,name,pages[1],stock2,0,change)
     elif (stock1 < stockp) and (stock2 == stockp):  #ORDERS IN SHOP1
-        print('[i] Orders only in ' + pages[0][0])
-        print('[i] Changing product {} in {} {} attribute: {}->{}'.format(name,pages[1][0],'stock',stock2,stock1),end='')
-        if change:
-            if update_value(pages[1][0],pages[1][3],name_dict2[name]['id'],'stock',stock1):
-                print(Fore.GREEN + ' DONE')
-                for product in past_products: #update past_products
-                    if product['name']==name:
-                        product['stock']=stock1
-                data_updated=True
-            else:
-                print(Fore.RED + ' ERROR')
-        else:
-            print('')
+        print(Fore.YELLOW + '[i] Orders only in {} - product: {}'.format(pages[0][0],name))
+        data_updated = data_updated and change_stock(past_products,name_dict2,name,pages[1],stock2,stock1,change)
     elif (stock2 < stockp) and (stock1 == stockp): #ORDERS IN SHOP2
-        print('[i] Orders only in ' + pages[1][0])
-        print('[i] Changing product {} in {} {} attribute: {}->{}'.format(name,pages[0][0],'stock',stock1,stock2),end='')
-        if change:
-            if update_value(pages[0][0],pages[0][3],name_dict1[name]['id'],'stock',stock2):
-                print(Fore.GREEN + ' DONE')
-                for product in past_products: #update past_products
-                    if product['name']==name:
-                        product['stock']=stock2
-                data_updated=True
-            else:
-                print(Fore.RED + ' ERROR')
-        else:
-            print('')
+        print(Fore.YELLOW + '[i] Orders only in {} - product: {}'.format(pages[1][0],name))
+        data_updated = data_updated and change_stock(past_products,name_dict1,name,pages[0],stock1,stock2,change)
     else: #ERROR
         if stock1 == stockp and stock2 == stockp and stock1 == stock2:
             pass #stock synced
@@ -151,5 +86,6 @@ for name in past_name_dict:
 
 if data_updated:
     save_products((past_products,past_availabilities,past_deliveries),past_data_filename)
+
 
 print('###################\nDone in {} seconds.'.format(round(time.time()-start,3)))
