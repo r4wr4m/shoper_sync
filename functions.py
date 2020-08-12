@@ -528,4 +528,4 @@ def change_stock(past_products,name_dict,product_name,page,old_value,new_value,c
             return False
     else:
         print('')
-        return False
+        return True
