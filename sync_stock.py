@@ -64,20 +64,26 @@ for name in past_name_dict:
         stock = stockp - (stockp-stock1) - (stockp-stock2)
         print(Fore.YELLOW + '[i] Orders in both shops - product: {} (stock in the past: {})'.format(name,stockp))
         if stock >=0:
-            data_updated = data_updated and change_stock(past_products,name_dict1,name,pages[0],stock1,stock,change)
-            data_updated = data_updated and change_stock(past_products,name_dict2,name,pages[1],stock2,stock,change)
+            d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock,change)
+            data_updated = data_updated and d
+            d = change_stock(past_products,name_dict2,name,pages[1],stock2,stock,change)
+            data_updated = data_updated and d
         else:
             print(Fore.RED + '[!] ERROR: Sold more than in stock ({})!!! (product: {})'.format(stock,name))
             print('[i] Clearing stocks')
             #CLEARING STOCKS
-            data_updated = data_updated and change_stock(past_products,name_dict1,name,pages[0],stock1,0,change)
-            data_updated = data_updated and change_stock(past_products,name_dict2,name,pages[1],stock2,0,change)
+            d = change_stock(past_products,name_dict1,name,pages[0],stock1,0,change)
+            data_updated = data_updated and d
+            d = change_stock(past_products,name_dict2,name,pages[1],stock2,0,change)
+            data_updated = data_updated and d
     elif (stock1 < stockp) and (stock2 == stockp):  #ORDERS IN SHOP1
         print(Fore.YELLOW + '[i] Orders only in {} - product: {}'.format(pages[0][0],name))
-        data_updated = data_updated and change_stock(past_products,name_dict2,name,pages[1],stock2,stock1,change)
+        d = change_stock(past_products,name_dict2,name,pages[1],stock2,stock1,change)
+        data_updated = data_updated and d
     elif (stock2 < stockp) and (stock1 == stockp): #ORDERS IN SHOP2
         print(Fore.YELLOW + '[i] Orders only in {} - product: {}'.format(pages[1][0],name))
-        data_updated = data_updated and change_stock(past_products,name_dict1,name,pages[0],stock1,stock2,change)
+        d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock2,change)
+        data_updated = data_updated and d
     else: #ERROR
         if stock1 == stockp and stock2 == stockp and stock1 == stock2:
             pass #stock synced
