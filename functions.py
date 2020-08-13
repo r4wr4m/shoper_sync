@@ -540,6 +540,6 @@ def send_mail(mail_creds,to,text):
         server.login(mail_creds[0],mail_creds[1])
         server.sendmail(sent_from, to, email_text)
         server.close()
-        print('Email sent!')
+        print(Fore.GREEN + '[+] Email sent!')
     except Exception as e:
-        print('Email not sent: ' + str(e))
+        print(Fore.RED + '[-] Email not sent: ' + str(e))
