@@ -84,6 +84,14 @@ for name in past_name_dict:
         print(Fore.YELLOW + '[i] Orders only in {} - product: {}'.format(pages[1][0],name))
         d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock2,change)
         data_updated = data_updated and d
+    elif (stock1 > stockp) and (stock2 == stockp):  #STOCK INCREASED IN SHOP1
+        print(Fore.YELLOW + '[i] Stocked increased in {} - product: {}'.format(pages[0][0],name))
+        d = change_stock(past_products,name_dict2,name,pages[1],stock2,stock1,change)
+        data_updated = data_updated and d
+    elif (stock2 > stockp) and (stock1 == stockp): #STOCK INCREASED IN SHOP2
+        print(Fore.YELLOW + '[i] Stocked increased in {} - product: {}'.format(pages[1][0],name))
+        d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock2,change)
+        data_updated = data_updated and d
     else: #ERROR
         if stock1 == stockp and stock2 == stockp and stock1 == stock2:
             pass #stock synced
