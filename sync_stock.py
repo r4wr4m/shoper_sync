@@ -55,6 +55,7 @@ else:
     print(Fore.RED+'[-] Stock information is not synchronized')
 
 #SYNCHRONIZING STOCKS INFORMATION
+email_text=""
 data_updated = True
 for name in past_name_dict:
     stock1=name_dict1[name]['stock']
@@ -96,10 +97,14 @@ for name in past_name_dict:
         if stock1 == stockp and stock2 == stockp and stock1 == stock2:
             pass #stock synced
         else:
-            print(Fore.RED+'[-] UNKNOWN STOCK ERROR: {} {}: {} {} :{} PAST DATA: {}'.format(name,pages[0][0],stock1,pages[1][0],stock2,stockp))
+            text = '[-] UNKNOWN STOCK ERROR: {} {}: {} {} :{} PAST DATA: {}'.format(name,pages[0][0],stock1,pages[1][0],stock2,stockp)
+            print(Fore.RED+text)
+            email_text+=text+'\n'
 
 if data_updated:
     save_products((past_products,past_availabilities,past_deliveries),past_data_filename)
+if email_text != '' and mail_creds[0] != '' and mail_creds[1] != '':
+    send_mail(mail_creds,to,email_text)
 
 
 print('###################\nDone in {} seconds.'.format(round(time.time()-start,3)))

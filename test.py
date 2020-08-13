@@ -26,6 +26,28 @@ def test(page):
 
 #products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file=False) #load_data(active_only=False,from_file=False)
 
-test(pages[1])
+#test(pages[1])
 
 print('###################\nDone in {} seconds.'.format(round(time.time()-start,3)))
+
+import smtplib
+
+mail_creds=['','']
+to = ['']
+
+
+
+def send_mail(mail_creds,to,text):
+    sent_from = mail_creds[0]
+    subject = 'POWIADOMIENIE ZE SKRYPTU SHOPERUJACEGO'
+    email_text = 'From: {}\nTo: {}\nSubject: {}\n\n{}\n'.format(mail_creds[0], ", ".join(to), subject, text)
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login(mail_creds[0],mail_creds[1])
+        server.sendmail(sent_from, to, email_text)
+        server.close()
+        print('Email sent!')
+    except Exception as e:
+        print('Email not sent: ' + str(e))
+send_mail(mail_creds,to,'TEST')

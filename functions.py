@@ -1,4 +1,4 @@
-import sys,requests,re,json,time,pickle,time,os,sys
+import sys,requests,re,json,time,pickle,time,os,smtplib
 from math import ceil
 from creds import pages #pages=[['domain','user','pass','token'], ['','','','']]
 from colorama import Fore, init 
@@ -529,3 +529,17 @@ def change_stock(past_products,name_dict,product_name,page,old_value,new_value,c
     else:
         print('')
         return False
+        
+def send_mail(mail_creds,to,text):
+    sent_from = mail_creds[0]
+    subject = 'POWIADOMIENIE ZE SKRYPTU SHOPERUJACEGO'
+    email_text = 'From: {}\nTo: {}\nSubject: {}\n\n{}\n'.format(mail_creds[0], ", ".join(to), subject, text)
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login(mail_creds[0],mail_creds[1])
+        server.sendmail(sent_from, to, email_text)
+        server.close()
+        print('Email sent!')
+    except Exception as e:
+        print('Email not sent: ' + str(e))
