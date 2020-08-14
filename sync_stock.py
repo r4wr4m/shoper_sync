@@ -34,9 +34,9 @@ past_name_dict = create_name_dict(past_products,'PAST DATA') #creating dictionar
 
 print(Fore.BLUE+'###################\nCOMPARING DATA\n###################')
 #COMPARING DATA WITHOUT STOCKS
-products1_past = compare_products(products[0],past_products,name_dict1,past_name_dict,pages[0][0],'PAST DATA',availabilities[0],past_availabilities,deliveries[0],past_deliveries,['active','price','availability_name','delivery_name'],False,False)
-products2_past = compare_products(past_products,products[1],past_name_dict,name_dict2,'PAST DATA',pages[1][0],past_availabilities,availabilities[1],past_deliveries,deliveries[1],['active','price','availability_name','delivery_name'],False,False)
-products1_product2 = compare_products(products[0],products[1],name_dict1,name_dict2,pages[0][0],pages[1][0],availabilities[0],availabilities[1],deliveries[0],deliveries[1],['active','price','availability_name','delivery_name'],False,False)
+products1_past = compare_products(products[0],past_products,name_dict1,past_name_dict,pages[0][0],'PAST DATA',availabilities[0],past_availabilities,deliveries[0],past_deliveries,['active','availability_name','delivery_name'],False,False)
+products2_past = compare_products(past_products,products[1],past_name_dict,name_dict2,'PAST DATA',pages[1][0],past_availabilities,availabilities[1],past_deliveries,deliveries[1],['active','availability_name','delivery_name'],False,False)
+products1_product2 = compare_products(products[0],products[1],name_dict1,name_dict2,pages[0][0],pages[1][0],availabilities[0],availabilities[1],deliveries[0],deliveries[1],['active','availability_name','delivery_name'],False,False)
 
 if products1_past and products2_past and products1_product2: #PRODUCT INFORMATION SYNCED
     print(Fore.GREEN+'[+] Product information is synchronized')
