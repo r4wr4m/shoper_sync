@@ -497,7 +497,7 @@ def copy_attribute(page1,page2,name_dict1,name_dict2,attribute,print_only=True,i
     
 def create_past_data(filename,from_file,active_only):
     products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
-    equal = compare_products(products[0],products[1],name_dict1,name_dict2,pages[0][0],pages[1][0],availabilities[0],availabilities[1],deliveries[0],deliveries[1],['active','stock','price','availability_name','delivery_name'],True,False)
+    equal = compare_products(products[0],products[1],name_dict1,name_dict2,pages[0][0],pages[1][0],availabilities[0],availabilities[1],deliveries[0],deliveries[1],['active','stock','availability_name','delivery_name'],True,False)
     if equal: #CREATE PAST DATA
         save_products((products[0],availabilities[0],deliveries[0]),filename)
         print(Fore.GREEN+'###################\n[+] Products information is synchronized, file data/{} created'.format(filename))
