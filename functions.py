@@ -1,6 +1,6 @@
 import sys,requests,re,json,time,pickle,time,os,smtplib
 from math import ceil
-from creds import pages #pages=[['domain','user','pass','token'], ['','','','']]
+from creds import * #pages=[['domain','user','pass','token'], ['','','','']]
 from colorama import Fore, init 
 init(autoreset=True)
 #init(autoreset=True,convert=True) #in windows??
