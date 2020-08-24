@@ -538,7 +538,7 @@ def send_mail(mail_creds,to,text):
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.ehlo()
         server.login(mail_creds[0],mail_creds[1])
-        server.sendmail(sent_from, to, email_text)
+        server.sendmail(sent_from, to, email_text.encode("utf8"))
         server.close()
         print(Fore.GREEN + '[+] Email sent!')
     except Exception as e:
