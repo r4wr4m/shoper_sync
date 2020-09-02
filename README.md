@@ -3,10 +3,11 @@ Skrypty ułatwiają zarządzanie produktami (porównywanie, kopiowanie atrybutó
 Działa na zarówno na systemach Windows i Linux.
 
 ## Instalacja
-1. Zainstaluj Python 3 
+1. Zainstaluj Python 3 (https://www.python.org/downloads/)
 2. Ściągnij repozytorium (komenda 'git clone https://github.com/r4wr4m/shoper_sync.git' lub ściągając plik [zip_file](https://github.com/r4wr4m/shoper_sync/archive/master.zip "repo"))
 3. Zainstaluj zależności (komenda python -m pip install -r requirements.txt)
 4. Uzupełnij informacje o sklepach w pliku creds.py
+5. (Opcjonalnie) Zainstaluj poprawkę biblioteki InvoiceGenerator, umożliwiającej generowanie faktur w języku polskim (python3 install_polish_invoice.py)
 
 ## Wykorzystanie
 
