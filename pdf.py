@@ -1,3 +1,4 @@
+#Part of the InvoiceGenerator library partialy translated to Polish (changing language doesn't work in the library)
 # -*- coding: utf-8 -*-
 import errno
 import locale
@@ -230,7 +231,7 @@ class SimpleInvoice(BaseInvoice):
             im = Image.open(address.logo_filename)
             height = 30.0
             width = float(im.size[0]) / (float(im.size[1])/height)
-            self.pdf.drawImage(self.invoice.provider.logo_filename, (left + 84) * mm - width, (top - 4) * mm, width, height, mask="auto")
+            self.pdf.drawImage(self.invoice.provider.logo_filename, (left + 79) * mm - width, (top - 4) * mm, width, height, mask="auto")
 
     def _drawClient(self, TOP, LEFT):
         self._drawAddress(TOP, LEFT, 88, 41, _(u'Nabywca'), self.invoice.client)
@@ -459,9 +460,16 @@ class SimpleInvoice(BaseInvoice):
             self.pdf.drawImage(self.invoice.creator.stamp_filename, (LEFT) * mm, (TOP - 2) * mm - height, 200, height, mask="auto")
 
         path = self.pdf.beginPath()
-        path.moveTo((LEFT + 8) * mm, (TOP) * mm - height)
+        path.moveTo((LEFT - 80) * mm, (TOP) * mm - height)
+        path.lineTo((LEFT - 20) * mm, (TOP) * mm - height)
+        self.pdf.drawPath(path, True, True)
+
+        path = self.pdf.beginPath()
+        path.moveTo((LEFT + 4) * mm, (TOP) * mm - height)
         path.lineTo((LEFT + self.line_width) * mm, (TOP) * mm - height)
         self.pdf.drawPath(path, True, True)
+
+        self.pdf.drawString((LEFT -70) * mm, (TOP - 5) * mm - height, '%s' % (_(u'podpis kupującego')))
         self.pdf.drawString((LEFT + 10) * mm, (TOP - 5) * mm - height, '%s' % (_(u'podpis sprzedawcy')))
 
     def _drawQR(self, TOP, LEFT, size=130.0):
@@ -483,9 +491,9 @@ class SimpleInvoice(BaseInvoice):
         items = []
         lang = get_lang()
         if self.invoice.date and self.invoice.use_tax:
-            items.append((LEFT * mm, '%s: %s' % (_(u'Date of exposure taxable invoice'), format_date(self.invoice.date, locale=lang))))
+            items.append((LEFT * mm, '%s: %s' % (_(u'Data wystawienia'), format_date(self.invoice.date, locale=lang))))
         elif self.invoice.date and not self.invoice.use_tax:
-            items.append((LEFT * mm, '%s: %s' % (_(u'Date of exposure'), format_date(self.invoice.date, locale=lang))))
+            items.append((LEFT * mm, '%s: %s' % (_(u'Data wystawienia'), format_date(self.invoice.date, locale=lang))))
         if self.invoice.payback:
             items.append((LEFT * mm, '%s: %s' % (_(u'Due date'), format_date(self.invoice.payback, locale=lang))))
         if self.invoice.taxable_date:
@@ -559,7 +567,7 @@ class ProformaInvoice(SimpleInvoice):
         top = TOP + 1
         items = []
         if self.invoice.date:
-            items.append((LEFT * mm, '%s: %s' % (_(u'Date of exposure'), self.invoice.date)))
+            items.append((LEFT * mm, '%s: %s' % (_(u'Data wystawienia'), self.invoice.date)))
         if self.invoice.payback:
             items.append((LEFT * mm, '%s: %s' % (_(u'Payback'), self.invoice.payback)))
 

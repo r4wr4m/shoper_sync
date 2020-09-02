@@ -30,7 +30,7 @@ provider = Provider('My company',
     note='TestNote\nTestNote', 
     logo_filename='/home/user/Downloads/logo.png',
     vat_note='TestVatNote')
-creator = Creator('John Doe', stamp_filename='')
+creator = Creator('', stamp_filename='')
 
 page=None
 for p in pages:
@@ -98,6 +98,5 @@ invoice.add_item(Item(1, order_info['shipping_cost'], description='Dostawa ({})'
 pdf = SimpleInvoice(invoice)
 pdf.gen(filename, generate_qr_code=False)
 print(Fore.GREEN+'[+] Invoice generated into file: {}'.format(filename))
-
 
 print('###################\nDone in {} seconds.'.format(round(time.time()-start,3)))

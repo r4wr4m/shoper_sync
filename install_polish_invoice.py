@@ -5,3 +5,4 @@ for path in sys.path:
 		print("Polish language installed")
 		sys.exit(1)
 print('Directory InvoiceGenerator doesn\'t exist!')
+print('Try to install InvoiceGenerator library (python3 -m pip install InvoiceGenerator)')

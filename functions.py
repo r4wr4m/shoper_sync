@@ -543,3 +543,116 @@ def send_mail(mail_creds,to,text):
         print(Fore.GREEN + '[+] Email sent!')
     except Exception as e:
         print(Fore.RED + '[-] Email not sent: ' + str(e))
+
+def get_order_info(page,token,order_id): #returns order info
+    print(Fore.GREEN+'[+] Downloading order information from '+ page)
+    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
+    try:
+        text = requests.get('https://'+page+'/webapi/rest/orders?filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+    #print_pretty_json(text)
+    try:
+        j = json.loads(text)
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
+    if len(j['list'])>0:
+
+        info =  {
+                'date':j['list'][0]['date'],
+                'email':j['list'][0]['email'],
+                'sum':j['list'][0]['sum'],
+                'shipping_cost':j['list'][0]['shipping_cost'],
+                'shipping_name':get_shipping_name(page,token,j['list'][0]['shipping_id']),
+                'shipping_tax_value':j['list'][0]['shipping_tax_value'],
+                'delivery_address':
+                    {
+                    'firstname':j['list'][0]['delivery_address']['firstname'],
+                    'lastname':j['list'][0]['delivery_address']['lastname'],
+                    'company':j['list'][0]['delivery_address']['company'],
+                    'city':j['list'][0]['delivery_address']['city'],
+                    'postcode':j['list'][0]['delivery_address']['postcode'],
+                    'street1':j['list'][0]['delivery_address']['street1'],
+                    'street2':j['list'][0]['delivery_address']['street2'],
+                    'country':j['list'][0]['delivery_address']['country'],
+                    'phone':j['list'][0]['delivery_address']['phone'],
+                    },
+                'billing_address':
+                    {
+                    'firstname':j['list'][0]['billing_address']['firstname'],
+                    'lastname':j['list'][0]['billing_address']['lastname'],
+                    'company':j['list'][0]['billing_address']['company'],
+                    'city':j['list'][0]['billing_address']['city'],
+                    'postcode':j['list'][0]['billing_address']['postcode'],
+                    'street1':j['list'][0]['billing_address']['street1'],
+                    'street2':j['list'][0]['billing_address']['street2'],
+                    'country':j['list'][0]['billing_address']['country'],
+                    'phone':j['list'][0]['billing_address']['phone'],
+                    }
+                }
+        return info
+    else:
+        print(Fore.RED+'[!] Order ' + str(order_id) + 'not found in ' + page)
+        sys.exit(1)
+
+def get_ordered_products(page,token,order_id): #returns ordered products
+    print(Fore.GREEN+'[+] Downloading ordered products information from '+ page)
+    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
+    ordered_products=[]
+    try:
+        #{"filters":{"translations.pl_PL.active":"1"}
+        text = requests.get('https://'+page+'/webapi/rest/order-products?filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify).text
+        #text = requests.get('https://'+page+'/webapi/rest/order-products',headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+    #print_pretty_json(text)
+    try:
+        j = json.loads(text)
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
+    if len(j['list'])>0:
+        for product in j['list']:
+            ordered_products.append({
+                'name':product['name'],
+                'price':product['price'],
+                'quantity':product['quantity'],
+                'tax_value':product['tax_value'],
+                'unit':product['unit'],
+                })
+        return ordered_products
+    else:
+        print(Fore.RED+'[!] No products ordered in order : ' + str(order_id))
+        sys.exit(1)
+
+def get_shipping_name(page,token,shipping_id): #returns shipping name
+    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
+    try:
+        #{"filters":{"translations.pl_PL.active":"1"}
+        text = requests.get('https://'+page+'/webapi/rest/shippings?filters={"shipping_id":'+str(shipping_id)+'}',headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+    #print_pretty_json(text)
+    try:
+        j = json.loads(text)
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
+    if len(j['list'])>0:
+        return j['list'][0]['translations']['pl_PL']['name']
+    else:
+        print(Fore.RED+'[!] Shipping id {} not found!' + str(shipping_id))
+        sys.exit(1)
+'''
+#############################################
+############### ALLEGRO STUFF ###############
+#############################################
+'''
+'''
+https://api.allegro.pl
+https://api.allegro.pl/offers/listing?category.id=...
+'''
