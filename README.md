@@ -46,6 +46,6 @@ Available options:
 ### Generowanie faktury
 Skrypt generuje fakturę na podstawie podanego numeru zamówienia. Przed generowaniem faktury, należy wprowadzić dane sprzedawcy w pliku invoice.py.
 
-```python3 invoice.py domena numer_zamówienia numer_faktury nazwa_pliku```
+```python invoice.py domena numer_zamówienia numer_faktury nazwa_pliku```
 
 domena - np. google.pl
