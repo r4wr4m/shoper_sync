@@ -68,23 +68,6 @@ client = Client(clientname,
     logo_filename='', 
     vat_note='TestVatNote')
 
-clientname=''
-client = Client(clientname, 
-    address='ulica testowa 32', 
-    city='testowo', 
-    zip_code='00-000',
-    phone='123-456-789',
-    email='testowo@testowo.testowo', 
-    bank_name='TestBank', 
-    bank_account='TestBankAccount', 
-    bank_code='PL',
-    note='TestNote\nTestNote', 
-    #vat_id='TestVatId', 
-    #ir='TestOrderInfo',
-    logo_filename='', 
-    vat_note='TestVatNote')
-
-
 invoice = Invoice(client, provider, creator)
 invoice.currency = 'zł'
 invoice.currency_locale = 'pl_PL.UTF-8'
