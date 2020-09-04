@@ -345,7 +345,7 @@ def compare_products(products1,products2,name_dict1,name_dict2,page1,page2,avail
     tests.append(['Equal product quantities:',compare_product_quantities(products1,products2,page1,page2,print_details)])
     tests.append(['Equal product names:',compare_dictionary_names(name_dict1,name_dict2,page1,page2,'products',print_details)])
     tests.append(['Equal product availabilities:',compare_dictionary_names(availabilities1,availabilities2,page1,page2,'availabilities',print_details)])
-    tests.append(['Equal product deliveries:',compare_dictionary_names(availabilities1,availabilities2,page1,page2,'deliveries',print_details)])
+    tests.append(['Equal product deliveries:',compare_dictionary_names(deliveries1,deliveries2,page1,page2,'deliveries',print_details)])
     tests.append(['Equal sets of products:',compare_sets(name_dict1,name_dict2,print_details)])
     tests.append(['No product duplicates in '+page1+':',find_duplicates(products1,page1,print_details)])
     tests.append(['No product duplicates in '+page2+':',find_duplicates(products2,page2,print_details)])
