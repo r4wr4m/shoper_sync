@@ -1,4 +1,4 @@
-import sys,requests,re,json,time,pickle,time,os,smtplib
+import sys,requests,re,json,time,pickle,time,os,smtplib, xlwt
 from math import ceil
 from creds import * #pages=[['domain','user','pass','token'], ['','','','']]
 from colorama import Fore, init 
@@ -10,7 +10,7 @@ init(autoreset=True)
 #############################################
 ua = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36'
 headers = {'User-Agent': ua}
-proxy=False
+proxy=True
 if proxy:
     proxies = {'http': 'http://127.0.0.1:8080','https':'http://127.0.0.1:8080'}
     verify=False
@@ -530,20 +530,9 @@ def change_stock(past_products,name_dict,product_name,page,old_value,new_value,c
         print('')
         return False
         
-def send_mail(mail_creds,to,text):
-    sent_from = mail_creds[0]
-    subject = 'POWIADOMIENIE ZE SKRYPTU SHOPERUJACEGO'
-    email_text = 'From: {}\nTo: {}\nSubject: {}\n\n{}\n'.format(mail_creds[0], ", ".join(to), subject, text)
-    try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-        server.ehlo()
-        server.login(mail_creds[0],mail_creds[1])
-        server.sendmail(sent_from, to, email_text.encode("utf8"))
-        server.close()
-        print(Fore.GREEN + '[+] Email sent!')
-    except Exception as e:
-        print(Fore.RED + '[-] Email not sent: ' + str(e))
-
+#############################################
+################## ORDERS ###################
+#############################################
 def get_order_info(page,token,order_id): #returns order info
     print(Fore.GREEN+'[+] Downloading order information from '+ page)
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
@@ -552,7 +541,7 @@ def get_order_info(page,token,order_id): #returns order info
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)
-    #print_pretty_json(text)
+    print_pretty_json(text)
     try:
         j = json.loads(text)
     except:
@@ -600,33 +589,49 @@ def get_order_info(page,token,order_id): #returns order info
 def get_ordered_products(page,token,order_id): #returns ordered products
     print(Fore.GREEN+'[+] Downloading ordered products information from '+ page)
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
-    ordered_products=[]
+
+    #Grabing info about orders
     try:
-        #{"filters":{"translations.pl_PL.active":"1"}
-        text = requests.get('https://'+page+'/webapi/rest/order-products?filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify).text
-        #text = requests.get('https://'+page+'/webapi/rest/order-products',headers=headers,proxies=proxies,verify=verify).text
+        text=requests.get('https://'+page+'/webapi/rest/order-products?limit='+ str(products_per_request) + '&page=99999&filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify).text
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
-        sys.exit(1)
-    #print_pretty_json(text)
+        sys.exit(1)    
     try:
         j = json.loads(text)
+        count=j['count']
+        pages=j['pages']
     except:
         print(Fore.RED+'[-] Error parsing JSON (pages info)')
         sys.exit(1)
-    if len(j['list'])>0:
-        for product in j['list']:
-            ordered_products.append({
-                'name':product['name'],
-                'price':product['price'],
-                'quantity':product['quantity'],
-                'tax_value':product['tax_value'],
-                'unit':product['unit'],
-                })
-        return ordered_products
-    else:
-        print(Fore.RED+'[!] No products ordered in order : ' + str(order_id))
-        sys.exit(1)
+
+    #Downloading orders info
+    requests_count=int(pages)
+    ordered_products=[]
+
+    for i in range(1,requests_count+1):
+        print('[i] {}\t{}/{} '.format(page,i,requests_count))
+        if i != 0: #Page 0 returns the same results as page 1 
+            try:
+                text = requests.get('https://'+page+'/webapi/rest/order-products?limit='+str(products_per_request)+'&page='+str(i)+'&filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify).text
+            except Exception as e:
+                print(Fore.RED+'[!] Connection error: ' + str(e))
+                sys.exit(1)
+            try:
+                j = json.loads(text)
+            except:
+                print(Fore.RED+'[-] Error parsing JSON (pages info)')
+                sys.exit(1)
+            if len(j['list'])>0:
+                for product in j['list']:
+                    ordered_products.append({
+                        'name':product['name'],
+                        'price':product['price'],
+                        'quantity':product['quantity'],
+                        'tax_value':product['tax_value'],
+                        'unit':product['unit'],
+                        })
+    return ordered_products
+
 
 def get_shipping_name(page,token,shipping_id): #returns shipping name
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
@@ -647,6 +652,62 @@ def get_shipping_name(page,token,shipping_id): #returns shipping name
     else:
         print(Fore.RED+'[!] Shipping id {} not found!' + str(shipping_id))
         sys.exit(1)
+
+def get_orders(page,token,date_from='',date_to=''): #returns order info
+    print(Fore.GREEN+'[+] Downloading orders information from '+ page)
+    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
+    #Grabing info about orders
+    try:
+        text=requests.get('https://'+page+'/webapi/rest/orders?limit='+ str(products_per_request) + '&page=99999&filters={"date":{">=":"'+date_from+'","<=":"'+date_to+'"}}',headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)    
+    try:
+        j = json.loads(text)
+        count=j['count']
+        pages=j['pages']
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
+
+    #Downloading orders info
+    requests_count=int(pages)
+    ordered_products=[]
+    orders=[]
+
+    for i in range(1,requests_count+1):
+        print('[i] {}\t{}/{} '.format(page,i,requests_count))
+        if i != 0: #Page 0 returns the same results as page 1 
+            try:
+                text = requests.get('https://'+page+'/webapi/rest/orders?limit='+ str(products_per_request) +'&page='+str(i)+'&filters={"date":{">=":"'+date_from+'","<=":"'+date_to+'"}}',headers=headers,proxies=proxies,verify=verify).text
+            except Exception as e:
+                print(Fore.RED+'[!] Connection error: ' + str(e))
+                sys.exit(1)
+            try:
+                j = json.loads(text)
+            except:
+                print(Fore.RED+'[-] Error parsing JSON (pages info)')
+                sys.exit(1)
+            if len(j['list'])>0:
+                for order in j['list']: 
+                    orders.append({
+                        'date':order['date'],
+                        'order_id':order['order_id'],
+                        'email':order['email'],
+                        'firstname':order['delivery_address']['firstname'],
+                        'lastname':order['delivery_address']['lastname'],
+                        'postcode':order['delivery_address']['postcode'],
+                        'city':order['delivery_address']['city'],
+                        'street1':order['delivery_address']['street1'],
+                        'street2':order['delivery_address']['street2'],
+                        'country':order['delivery_address']['country'],
+                        })
+            else:
+                print(Fore.RED+'[!] Orders not found in ' + page)
+                sys.exit(1)
+    return orders
+
+
 '''
 #############################################
 ############### ALLEGRO STUFF ###############
@@ -656,3 +717,32 @@ def get_shipping_name(page,token,shipping_id): #returns shipping name
 https://api.allegro.pl
 https://api.allegro.pl/offers/listing?category.id=...
 '''
+#############################################
+################ EXCEL STUFF ################
+#############################################
+
+def save2xls(table,filename): #saves [[row,row,...],[row,row,...], ... ] to xls
+    book = xlwt.Workbook(encoding="utf-8")
+    sheet1 = book.add_sheet("Sheet 1")
+    for column in range(len(table)):
+        for row in range(len(table[column])):
+            sheet1.write(row, column, table[column][row])
+    book.save(filename + ".xls")
+
+#############################################
+############## OTHER FUNCTIONS ##############
+#############################################
+
+def send_mail(mail_creds,to,text):
+    sent_from = mail_creds[0]
+    subject = 'POWIADOMIENIE ZE SKRYPTU SHOPERUJACEGO'
+    email_text = 'From: {}\nTo: {}\nSubject: {}\n\n{}\n'.format(mail_creds[0], ", ".join(to), subject, text)
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login(mail_creds[0],mail_creds[1])
+        server.sendmail(sent_from, to, email_text.encode("utf8"))
+        server.close()
+        print(Fore.GREEN + '[+] Email sent!')
+    except Exception as e:
+        print(Fore.RED + '[-] Email not sent: ' + str(e))
