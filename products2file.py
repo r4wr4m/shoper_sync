@@ -18,7 +18,7 @@ if compare_products(products[0],products[1],name_dict1,name_dict2,pages[0][0],pa
 	product_names=[]
 	for product in products[0]:
 		product_names.append(product['name'])
-	save2xls([product_names],filename)
+	save_columns2xls([product_names],filename)
 	print(Fore.GREEN+'[+] File {}.xls saved.'.format(filename))
 else:
 	print(Fore.RED+'[-] Different products in shops')

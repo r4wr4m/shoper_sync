@@ -10,7 +10,7 @@ init(autoreset=True)
 #############################################
 ua = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36'
 headers = {'User-Agent': ua}
-proxy=True
+proxy=False
 if proxy:
     proxies = {'http': 'http://127.0.0.1:8080','https':'http://127.0.0.1:8080'}
     verify=False
@@ -42,7 +42,7 @@ def api_login(page,usr,pwd): #returns token
 #############################################
 #### DOWNLOADING & PARSING PRODUCTS DATA ####
 #############################################
-def extract_data(text,availabilities,deliveries): #returns list [{'id':id,'name':name,...},...]
+def extract_data(text,availabilities,deliveries,passport_attribute_id): #returns list [{'id':id,'name':name,...},...]
 #Scraping data
     products=[]
     try:
@@ -62,6 +62,13 @@ def extract_data(text,availabilities,deliveries): #returns list [{'id':id,'name'
             price=product['stock']['price']
             delivery_id=product['stock']['delivery_id'] #DIFFERENT IDS ON PAGES
             availability_id=product['stock']['availability_id'] #DIFFERENT IDS ON PAGES
+            #passport number
+            passport = ''
+            if 'attributes' in product.keys() and len(product['attributes'])==1:
+                attribute_category_id = list(product['attributes'])[0]
+                attributes = product['attributes'][attribute_category_id]
+                if len(attributes)>0 and passport_attribute_id in attributes.keys():
+                    passport = product['attributes'][attribute_category_id][passport_attribute_id]        
             is_set=False
             children=[]
             children_quantities_in_set=[]
@@ -90,6 +97,7 @@ def extract_data(text,availabilities,deliveries): #returns list [{'id':id,'name'
                 'delivery_name':delivery_name,
                 'delivery_id':delivery_id,
                 'availability_id':availability_id,
+                'passport':passport,
                 'is_set':is_set,
                 'children':children,
                 'children_quantities_in_set':children_quantities_in_set
@@ -100,7 +108,7 @@ def api_get_products(page,token,availabilities,deliveries,active_only=False): #r
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
     total_data_size=0
     print(Fore.GREEN+'[+] Downloading product information from '+ page)
-    #Grabing info about pages
+    #Grabbing info about pages
     try:
         text=requests.get('https://'+page+'/webapi/rest/product-stocks?limit={}&page=99999'.format(products_per_request),headers=headers,proxies=proxies,verify=verify).text
     except Exception as e:
@@ -110,6 +118,21 @@ def api_get_products(page,token,availabilities,deliveries,active_only=False): #r
         j = json.loads(text)
         count=j['count']
         pages=j['pages']
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
+    #Grabbing the id of passport attribute 
+    try:
+        text=requests.get('https://'+page+'/webapi/rest/attributes?filters={"name":"kod"}',headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)    
+    try:
+        j = json.loads(text)
+        if len(j['list'])==1: 
+            passport_attribute_id = j['list'][0]['attribute_id']
+        else:
+            passport_attribute_id = ''
     except:
         print(Fore.RED+'[-] Error parsing JSON (pages info)')
         sys.exit(1)
@@ -140,7 +163,7 @@ def api_get_products(page,token,availabilities,deliveries,active_only=False): #r
             print(Fore.RED+'[!] Connection error: ' + str(e))
             sys.exit(1)
         data_size += len(text)
-        products += extract_data(text,availabilities,deliveries)
+        products += extract_data(text,availabilities,deliveries,passport_attribute_id)
         print(Fore.GREEN + '(~' + str(round(data_size/1024/1024,3)) +'MB)')
         total_data_size+=data_size
     print('[+] Total data transfered: ~{}MB ({})'.format(str(round(total_data_size/1024/1024,3)),page))
@@ -587,15 +610,24 @@ def get_order_info(page,token,order_id): #returns order info
         sys.exit(1)
 
 def get_ordered_products(page,token,order_id): #returns ordered products
-    print(Fore.GREEN+'[+] Downloading ordered products information from '+ page)
+    print(Fore.GREEN+'[+] Downloading ordered products information from '+ page + " (order id: "+ order_id +")")
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
 
     #Grabing info about orders
-    try:
-        text=requests.get('https://'+page+'/webapi/rest/order-products?limit='+ str(products_per_request) + '&page=99999&filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify).text
-    except Exception as e:
-        print(Fore.RED+'[!] Connection error: ' + str(e))
-        sys.exit(1)    
+    text=''
+    for i in range(3):
+        try:
+            r = requests.get('https://'+page+'/webapi/rest/order-products?limit='+ str(products_per_request) + '&page=99999&filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify)
+        except Exception as e:
+            print(Fore.RED+'[!] Connection error: ' + str(e))
+            sys.exit(1)
+        if r.status_code == 200:
+            text=r.text
+            break
+        else:
+            print(Fore.YELLOW +'|Retrying {}|'.format(i),end='')
+            time.sleep(1)
+
     try:
         j = json.loads(text)
         count=j['count']
@@ -611,25 +643,51 @@ def get_ordered_products(page,token,order_id): #returns ordered products
     for i in range(1,requests_count+1):
         print('[i] {}\t{}/{} '.format(page,i,requests_count))
         if i != 0: #Page 0 returns the same results as page 1 
-            try:
-                text = requests.get('https://'+page+'/webapi/rest/order-products?limit='+str(products_per_request)+'&page='+str(i)+'&filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify).text
-            except Exception as e:
-                print(Fore.RED+'[!] Connection error: ' + str(e))
-                sys.exit(1)
+            for i in range(3):
+                try:
+                    r = requests.get('https://'+page+'/webapi/rest/order-products?limit='+str(products_per_request)+'&page='+str(i)+'&filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify)
+                except Exception as e:
+                    print(Fore.RED+'[!] Connection error: ' + str(e))
+                    sys.exit(1)
+                if r.status_code == 200:
+                    text=r.text
+                    break
+                else:
+                    print(Fore.YELLOW +'|Retrying {}|'.format(i),end='')
+                    time.sleep(1)
             try:
                 j = json.loads(text)
             except:
                 print(Fore.RED+'[-] Error parsing JSON (pages info)')
                 sys.exit(1)
+            
             if len(j['list'])>0:
                 for product in j['list']:
-                    ordered_products.append({
+                    p = {
                         'name':product['name'],
+                        'product_id':int(product['product_id']),
                         'price':product['price'],
                         'quantity':product['quantity'],
                         'tax_value':product['tax_value'],
                         'unit':product['unit'],
-                        })
+                        'set':False,
+                        'part_of_set':False
+                        }
+                    ordered_products.append(p)
+                    if 'children' in product.keys():
+                        ordered_products[-1]['set'] = True
+                        for children in product['children']:
+                            ordered_products.append({
+                                'name':children['name'],
+                                'product_id':int(children['product_id']),
+                                'price':children['price'],
+                                'quantity':children['quantity'],
+                                'tax_value':children['tax_value'],
+                                'unit':children['unit'],
+                                'set':False,
+                                'part_of_set':True
+                                })                            
+
     return ordered_products
 
 
@@ -670,9 +728,9 @@ def get_orders(page,token,date_from='',date_to=''): #returns order info
         print(Fore.RED+'[-] Error parsing JSON (pages info)')
         sys.exit(1)
 
+    print(Fore.GREEN+'[+] ' + count + ' orders found.')
     #Downloading orders info
     requests_count=int(pages)
-    ordered_products=[]
     orders=[]
 
     for i in range(1,requests_count+1):
@@ -696,6 +754,7 @@ def get_orders(page,token,date_from='',date_to=''): #returns order info
                         'email':order['email'],
                         'firstname':order['delivery_address']['firstname'],
                         'lastname':order['delivery_address']['lastname'],
+                        'company':order['delivery_address']['company'],
                         'postcode':order['delivery_address']['postcode'],
                         'city':order['delivery_address']['city'],
                         'street1':order['delivery_address']['street1'],
@@ -721,12 +780,19 @@ https://api.allegro.pl/offers/listing?category.id=...
 ################ EXCEL STUFF ################
 #############################################
 
-def save2xls(table,filename): #saves [[row,row,...],[row,row,...], ... ] to xls
+def save_columns2xls(table,filename): #saves [[row,row,...],[row,row,...], ... ] to xls
     book = xlwt.Workbook(encoding="utf-8")
     sheet1 = book.add_sheet("Sheet 1")
     for column in range(len(table)):
         for row in range(len(table[column])):
             sheet1.write(row, column, table[column][row])
+    book.save(filename + ".xls")
+def save_rows2xls(table,filename): #saves [[column,column,...],[column,column,...], ... ] to xls
+    book = xlwt.Workbook(encoding="utf-8")
+    sheet1 = book.add_sheet("Sheet 1")
+    for column in range(len(table)):
+        for row in range(len(table[column])):
+            sheet1.write(column, row, table[column][row])
     book.save(filename + ".xls")
 
 #############################################
