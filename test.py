@@ -7,7 +7,7 @@ def test(page):
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
     #print('[+] Downloading product information from: '+ page)
     #print_pretty_json(requests.get('https://'+page+'/webapi/rest/products?limit=1&page=1&filters={"product_id":7169,"translations": {"pl_PL": {"active": "1"}}}',headers=headers,proxies=proxies,verify=verify).text)
-    print_pretty_json(requests.get('https://'+page[0]+'/webapi/rest/products?filters={"product_id":3038}',headers=headers,proxies=proxies,verify=verify).text)
+    #print_pretty_json(requests.get('https://'+page[0]+'/webapi/rest/products?filters={"product_id":3038}',headers=headers,proxies=proxies,verify=verify).text)
     #j=json.loads(requests.get('https://'+page[0]+'/webapi/rest/products?filters={"product_id":3038}',headers=headers,proxies=proxies,verify=verify).text)
     #print(j['list'][0])
     #print(requests.get('https://'+page+'/webapi/rest/product-stocks?limit=1&page=1',headers=headers,proxies=proxies,verify=verify).text)
@@ -29,6 +29,8 @@ def test(page):
 #products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file=False) #load_data(active_only=False,from_file=False)
 
 test(pages[1])
+write2file(changes_filename(),'TEST')
+write2file(changes_filename(),'TEST2')
 '''
 
 import smtplib

@@ -55,6 +55,8 @@ else:
     print(Fore.RED+'[-] Stock information is not synchronized')
 
 #SYNCHRONIZING STOCKS INFORMATION
+changes_file = changes_filename()
+write2file(changes_file,'CHANGING VALUES: '+str(change))
 email_text=""
 data_updated = True
 for name in past_name_dict:
@@ -65,9 +67,9 @@ for name in past_name_dict:
         stock = stockp - (stockp-stock1) - (stockp-stock2)
         print(Fore.YELLOW + '[i] Orders in both shops - product: {} (stock in the past: {})'.format(name,stockp))
         if stock >=0:
-            d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock,change)
+            d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock,change,changes_file)
             data_updated = data_updated and d
-            dd = change_stock(past_products,name_dict2,name,pages[1],stock2,stock,change)
+            dd = change_stock(past_products,name_dict2,name,pages[1],stock2,stock,change,changes_file)
             data_updated = data_updated and d and dd
         else:
             text = '[!] ERROR: Sold more than in stock ({})!!! (product: {})'.format(stock,name)
@@ -75,41 +77,41 @@ for name in past_name_dict:
             email_text+=text+'\n'
             print('[i] Clearing stocks')
             #CLEARING STOCKS
-            d = change_stock(past_products,name_dict1,name,pages[0],stock1,0,change)
+            d = change_stock(past_products,name_dict1,name,pages[0],stock1,0,change,changes_file)
             data_updated = data_updated and d
-            dd = change_stock(past_products,name_dict2,name,pages[1],stock2,0,change)
+            dd = change_stock(past_products,name_dict2,name,pages[1],stock2,0,change,changes_file)
             data_updated = data_updated and d and dd
     elif (stock1 < stockp) and (stock2 == stockp):  #ORDERS IN SHOP1
         print(Fore.YELLOW + '[i] Orders only in {} - product: {}'.format(pages[0][0],name))
-        d = change_stock(past_products,name_dict2,name,pages[1],stock2,stock1,change)
+        d = change_stock(past_products,name_dict2,name,pages[1],stock2,stock1,change,changes_file)
         data_updated = data_updated and d
     elif (stock2 < stockp) and (stock1 == stockp): #ORDERS IN SHOP2
         print(Fore.YELLOW + '[i] Orders only in {} - product: {}'.format(pages[1][0],name))
-        d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock2,change)
+        d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock2,change,changes_file)
         data_updated = data_updated and d
     elif (stock1 > stockp) and (stock2 == stockp):  #STOCK INCREASED IN SHOP1
         print(Fore.YELLOW + '[i] Stocked increased in {} - product: {}'.format(pages[0][0],name))
-        d = change_stock(past_products,name_dict2,name,pages[1],stock2,stock1,change)
+        d = change_stock(past_products,name_dict2,name,pages[1],stock2,stock1,change,changes_file)
         data_updated = data_updated and d
     elif (stock2 > stockp) and (stock1 == stockp): #STOCK INCREASED IN SHOP2
         print(Fore.YELLOW + '[i] Stocked increased in {} - product: {}'.format(pages[1][0],name))
-        d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock2,change)
+        d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock2,change,changes_file)
         data_updated = data_updated and d
     elif (stock1 > stockp) and (stock2 < stockp):  #STOCK INCREASED IN SHOP1 AND DECREASED IN SHOP2
         stock = stock1 - (stockp-stock2)
         text = '[i] Stocked increased in {} ({}->{}) AND decreased in {} ({}->{})- product: {}. New stock: {}'.format(pages[0][0],stockp,stock1,pages[1][0],stockp,stock2,name,stock)
         print(Fore.YELLOW + text)
         email_text+=text+'\n'
-        d = change_stock(past_products,name_dict2,name,pages[0],stock1,stock,change)
-        dd = change_stock(past_products,name_dict2,name,pages[1],stock2,stock,change)
+        d = change_stock(past_products,name_dict2,name,pages[0],stock1,stock,change,changes_file)
+        dd = change_stock(past_products,name_dict2,name,pages[1],stock2,stock,change,changes_file)
         data_updated = data_updated and d
     elif (stock2 > stockp) and (stock1 < stockp): #STOCK INCREASED IN SHOP2 AND DECREASED IN SHOP1
         stock = stock2 - (stockp-stock1)
         text = '[i] Stocked increased in {} ({}->{}) AND decreased in {} ({}->{})- product: {}. New stock: {}'.format(pages[1][0],stockp,stock2,pages[0][0],stockp,stock1,name,stock)
         print(Fore.YELLOW + text)
         email_text+=text+'\n'
-        d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock,change)
-        dd = change_stock(past_products,name_dict1,name,pages[1],stock2,stock,change)
+        d = change_stock(past_products,name_dict1,name,pages[0],stock1,stock,change,changes_file)
+        dd = change_stock(past_products,name_dict1,name,pages[1],stock2,stock,change,changes_file)
         data_updated = data_updated and d
     else: #ERROR
         if stock1 == stockp and stock2 == stockp and stock1 == stock2:

@@ -1,6 +1,6 @@
 creds.py
 __pycache__/
 data/
-log/
+logs/
 *.xls
 *.pdf

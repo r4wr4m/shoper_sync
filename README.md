@@ -67,7 +67,9 @@ Skrypt zapisuje nazwę zamawiającego, zamówione produkty oraz paszporty rośli
 ```python orders2file.py domena data_od data_do nazwa_pliku [offline] [active]```
 
 domena - np. google.pl
+
 data_od, data_do - data w formacie yyyy-MM-dd HH:mm:ss (przykłady: "2020-09-11 12:00:00", "2020-09-11 12", 2020-09-11, 2020-09, 2020)
+
 nazwa_pliku - nazwa pliku, do którego zostaną zapisane dane
 
 Dostępne opcje:

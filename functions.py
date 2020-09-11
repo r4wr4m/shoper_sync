@@ -1,4 +1,4 @@
-import sys,requests,re,json,time,pickle,time,os,smtplib,xlwt,xlrd
+import sys,requests,re,json,time,pickle,time,os,smtplib,xlwt,xlrd,datetime
 from math import ceil
 from creds import * #pages=[['domain','user','pass','token'], ['','','','']]
 from colorama import Fore, init 
@@ -494,18 +494,22 @@ def update_value(page,token,id,field,value):
     else:
         return False
 
-def copy_attribute(page1,page2,name_dict1,name_dict2,attribute,print_only=True,id_dict=None): #copies active statuses from page1 to page2
+def copy_attribute(page1,page2,name_dict1,name_dict2,attribute,changes_file,print_only=True,id_dict=None): #copies active statuses from page1 to page2
     diffs = diff(name_dict1,name_dict2,attribute,True) 
     i=0
     if len(diffs)>0:
         for d in diffs:  # d = [product_name,value1,value2,id1,id2]
             i+=1
             if attribute not in ['availability_name','delivery_name']:
-                print('[i] {}/{} Changing product {} in {} {} attribute: {}->{}\t({})'.format(i,len(diffs),d[4],page2[0],attribute,d[2],d[1],d[0]),end='')
+                text = '[i] {}/{} Changing product {} in {} {} attribute: {}->{}\t({})'.format(i,len(diffs),d[4],page2[0],attribute,d[2],d[1],d[0])
+                print(text,end='')
+                write2file(changes_file,text)
             else:   #['availability_name','delivery_name']
                 id1=name_dict2[d[0]][attribute.split('_')[0]+'_id'] #name_dict2['product_name']['delivery_id']  
                 id2=id_dict[d[1]]
-                print('[i] {}/{} Changing product {} in {} {} attribute: {}->{} (ID:{}->ID:{})\t({})'.format(i,len(diffs),d[4],page2[0],attribute,d[2],d[1],id1,id2,d[0]),end='')
+                text='[i] {}/{} Changing product {} in {} {} attribute: {}->{} (ID:{}->ID:{})\t({})'.format(i,len(diffs),d[4],page2[0],attribute,d[2],d[1],id1,id2,d[0])
+                print(text,end='')
+                write2file(changes_file,text)
             if print_only:
                 print('') #newline
             else:
@@ -540,8 +544,10 @@ def delete_past_data(filename):
         print(Fore.RED+'[-] Past data (data/{}) doesn\'t exist'.format(filename))
     sys.exit(1)
 
-def change_stock(past_products,name_dict,product_name,page,old_value,new_value,change):
-    print('[i] Changing product {} in {} {} attribute: {}->{}'.format(product_name,page[0],'stock',old_value,new_value),end='')
+def change_stock(past_products,name_dict,product_name,page,old_value,new_value,change,changes_file):
+    text = '[i] Changing product {} in {} {} attribute: {}->{}'.format(product_name,page[0],'stock',old_value,new_value) 
+    print(text,end='')
+    write2file(changes_file,text)
     if change:
         if update_value(page[0],page[3],name_dict[product_name]['id'],'stock',str(new_value)):
             print(Fore.GREEN + ' DONE')
@@ -555,7 +561,37 @@ def change_stock(past_products,name_dict,product_name,page,old_value,new_value,c
     else:
         print('')
         return False
-        
+
+def set_passport(page,token,product,passport,change): #returns ordered products
+    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
+
+    print(Fore.GREEN+'[+] Setting passport in {} - {} ("{}" => "{}")'.format(page,product['name'],product['passport'],passport),end='')
+
+    #updating passport
+    text=''
+    if (product['attribute_category_id']!='' and product['passport_attribute_id']!=''):
+        if change:
+            for i in range(3):
+                try: 
+                    data = '{"attributes": {"'+product['attribute_category_id']+'": {"'+product['passport_attribute_id']+'": "'+passport+'"}}}'
+                    data = '{"attributes": {"'+product['passport_attribute_id']+'": "'+passport+'"}}'
+                    url = 'https://'+page+'/webapi/rest/products/'+str(product['id'])
+                    r = requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify)
+                except Exception as e:
+                    print(Fore.RED+'[!] Connection error: ' + str(e))
+                    sys.exit(1)
+                if r.status_code == 200:
+                    text=r.text
+                    print(Fore.GREEN+' DONE')
+                    break
+                else:
+                    print(Fore.YELLOW +'|Retrying {}|'.format(i),end='')
+                    time.sleep(1)
+        else:
+            print()
+    else:
+        print(Fore.RED +'[-] Couldn\'t find passport attribute in {} - {} (attribute_category_id: {}, passport_attribute_id: {})'.format(page,product['name'],product['attribute_category_id'],product['passport_attribute_id']))
+
 #############################################
 ################## ORDERS ###################
 #############################################
@@ -769,36 +805,6 @@ def get_orders(page,token,date_from='',date_to=''): #returns order info
                 sys.exit(1)
     return orders
 
-def set_passport(page,token,product,passport,change): #returns ordered products
-    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
-
-    print(Fore.GREEN+'[+] Setting passport in {} - {} ("{}" => "{}")'.format(page,product['name'],product['passport'],passport),end='')
-
-    #updating passport
-    text=''
-    if (product['attribute_category_id']!='' and product['passport_attribute_id']!=''):
-        if change:
-            for i in range(3):
-                try: 
-                    data = '{"attributes": {"'+product['attribute_category_id']+'": {"'+product['passport_attribute_id']+'": "'+passport+'"}}}'
-                    data = '{"attributes": {"'+product['passport_attribute_id']+'": "'+passport+'"}}'
-                    url = 'https://'+page+'/webapi/rest/products/'+str(product['id'])
-                    r = requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify)
-                except Exception as e:
-                    print(Fore.RED+'[!] Connection error: ' + str(e))
-                    sys.exit(1)
-                if r.status_code == 200:
-                    text=r.text
-                    print(Fore.GREEN+' DONE')
-                    break
-                else:
-                    print(Fore.YELLOW +'|Retrying {}|'.format(i),end='')
-                    time.sleep(1)
-        else:
-            print()
-    else:
-        print(Fore.RED +'[-] Couldn\'t find passport attribute in {} - {} (attribute_category_id: {}, passport_attribute_id: {})'.format(page,product['name'],product['attribute_category_id'],product['passport_attribute_id']))
-
 '''
 #############################################
 ############### ALLEGRO STUFF ###############
@@ -856,3 +862,14 @@ def send_mail(mail_creds,to,text):
         print(Fore.GREEN + '[+] Email sent!')
     except Exception as e:
         print(Fore.RED + '[-] Email not sent: ' + str(e))
+
+def changes_filename():
+    if not os.path.isdir('logs'):
+        os.mkdir('logs')
+    filename = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    filename = 'logs/changes' + filename + '.txt'
+    return filename
+
+def write2file(filename,text):
+    with open(filename, 'a') as file:
+        file.write(text + '\n')
