@@ -51,8 +51,6 @@ for order in orders:
     ordered_products = get_ordered_products(page[0],token,order['order_id'])
     for product in ordered_products:
         passport=''
-        print(product['product_id'])
-        print(type(product['product_id']))
         for p in products: 
             if p['id']==product['product_id']:
                 passport = p['passport']

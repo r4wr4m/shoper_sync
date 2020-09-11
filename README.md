@@ -38,7 +38,7 @@ Przy kolejnych uruchomieniach skryptu, jeżeli plik past_data istnieje, skrypt p
 
 ```python sync_stock.py [options]```
 
-Available options:
+Dostępne opcje:
 * offline - załaduj informacje o produktach z pliku (pliki zapisywane są automatycznie)
 * active - ściągaj informacje tylko o aktywnych produktach
 * change - wprowadzaj zmiany (bez tej opcji skrypt tylko wyświetla możliwe zmiany)
@@ -50,3 +50,41 @@ Skrypt generuje fakturę na podstawie podanego numeru zamówienia. Przed generow
 ```python invoice.py domena numer_zamówienia numer_faktury nazwa_pliku```
 
 domena - np. google.pl
+
+### Zapisywanie nazw produktów do pliku
+Skrypt zapisuje nazwy produktów do pliku products.xls.
+Nazwy zapisywane są w pierwszej kolumnie.
+
+```python products2file.py [offline [active]]```
+
+Dostępne opcje:
+* offline - załaduj informacje o produktach z pliku (pliki zapisywane są automatycznie)
+* active - ściągaj informacje tylko o aktywnych produktach
+
+### Zapisywanie zamówionych produktów (z paszportami roślin) do pliku
+Skrypt zapisuje nazwę zamawiającego, zamówione produkty oraz paszporty roślin do pliku xls.
+
+```python orders2file.py domena data_od data_do nazwa_pliku [offline] [active]```
+
+domena - np. google.pl
+data_od, data_do - data w formacie yyyy-MM-dd HH:mm:ss (przykłady: "2020-09-11 12:00:00", "2020-09-11 12", 2020-09-11, 2020-09, 2020)
+nazwa_pliku - nazwa pliku, do którego zostaną zapisane dane
+
+Dostępne opcje:
+* offline - załaduj informacje o produktach z pliku (pliki zapisywane są automatycznie)
+* active - ściągaj informacje tylko o aktywnych produktach
+
+### Zapisywanie w sklepie paszportów roślin z pliku
+Skrypt zapisuje w wybranym sklepie paszporty roślin wczytane z pliku products.xls. 
+W pierwszej kolumnie powinny zostać wpisane nazwy produktów, w drugiej paszporty do przypisania.
+
+```python set_passports.py domena [offline] [active] [change]```
+
+domena - np. google.pl
+
+Dostępne opcje:
+* offline - załaduj informacje o produktach z pliku (pliki zapisywane są automatycznie)
+* active - ściągaj informacje tylko o aktywnych produktach
+* change - wprowadzaj zmiany (bez tej opcji skrypt tylko wyświetla możliwe zmiany)
+
+

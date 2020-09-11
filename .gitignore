@@ -2,3 +2,5 @@ creds.py
 __pycache__/
 data/
 log/
+*.xls
+*.pdf

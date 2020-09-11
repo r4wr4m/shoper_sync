@@ -1,4 +1,4 @@
-import sys,requests,re,json,time,pickle,time,os,smtplib, xlwt
+import sys,requests,re,json,time,pickle,time,os,smtplib,xlwt,xlrd
 from math import ceil
 from creds import * #pages=[['domain','user','pass','token'], ['','','','']]
 from colorama import Fore, init 
@@ -64,6 +64,7 @@ def extract_data(text,availabilities,deliveries,passport_attribute_id): #returns
             availability_id=product['stock']['availability_id'] #DIFFERENT IDS ON PAGES
             #passport number
             passport = ''
+            attribute_category_id=''
             if 'attributes' in product.keys() and len(product['attributes'])==1:
                 attribute_category_id = list(product['attributes'])[0]
                 attributes = product['attributes'][attribute_category_id]
@@ -97,6 +98,8 @@ def extract_data(text,availabilities,deliveries,passport_attribute_id): #returns
                 'delivery_name':delivery_name,
                 'delivery_id':delivery_id,
                 'availability_id':availability_id,
+                'attribute_category_id':attribute_category_id,
+                'passport_attribute_id':passport_attribute_id,
                 'passport':passport,
                 'is_set':is_set,
                 'children':children,
@@ -766,6 +769,35 @@ def get_orders(page,token,date_from='',date_to=''): #returns order info
                 sys.exit(1)
     return orders
 
+def set_passport(page,token,product,passport,change): #returns ordered products
+    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
+
+    print(Fore.GREEN+'[+] Setting passport in {} - {} ("{}" => "{}")'.format(page,product['name'],product['passport'],passport),end='')
+
+    #updating passport
+    text=''
+    if (product['attribute_category_id']!='' and product['passport_attribute_id']!=''):
+        if change:
+            for i in range(3):
+                try: 
+                    data = '{"attributes": {"'+product['attribute_category_id']+'": {"'+product['passport_attribute_id']+'": "'+passport+'"}}}'
+                    data = '{"attributes": {"'+product['passport_attribute_id']+'": "'+passport+'"}}'
+                    url = 'https://'+page+'/webapi/rest/products/'+str(product['id'])
+                    r = requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify)
+                except Exception as e:
+                    print(Fore.RED+'[!] Connection error: ' + str(e))
+                    sys.exit(1)
+                if r.status_code == 200:
+                    text=r.text
+                    print(Fore.GREEN+' DONE')
+                    break
+                else:
+                    print(Fore.YELLOW +'|Retrying {}|'.format(i),end='')
+                    time.sleep(1)
+        else:
+            print()
+    else:
+        print(Fore.RED +'[-] Couldn\'t find passport attribute in {} - {} (attribute_category_id: {}, passport_attribute_id: {})'.format(page,product['name'],product['attribute_category_id'],product['passport_attribute_id']))
 
 '''
 #############################################
@@ -794,6 +826,18 @@ def save_rows2xls(table,filename): #saves [[column,column,...],[column,column,..
         for row in range(len(table[column])):
             sheet1.write(column, row, table[column][row])
     book.save(filename + ".xls")
+def read_rows(filename): #reads columns from xls file [[column,column,...],[column,column,...], ... ] to xls
+    book = xlrd.open_workbook(filename+'.xls')
+    sheet1 = book.sheet_by_index(0)
+    table=[]
+    column_number = sheet1.ncols
+    row_number=sheet1.nrows
+    for r in range(row_number):
+        row=[]
+        for c in range(column_number):
+            row.append(sheet1.cell(r, c).value)
+        table.append(row)
+    return table
 
 #############################################
 ############## OTHER FUNCTIONS ##############
