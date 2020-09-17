@@ -20,7 +20,7 @@ else:
 start = time.time()
     
 #Loading product information (needed for passport numbers)
-products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
+products,availabilities,deliveries,name_dict1,name_dict2,auctions = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
 
 page=None
 if domain == pages[0][0]:

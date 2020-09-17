@@ -11,6 +11,12 @@ Działa na zarówno na systemach Windows i Linux.
 
 ## Wykorzystanie
 
+### Uruchomienie interaktywnego menu 
+Skrypt ułatwia korzystanie z poszczególnych funkcji
+
+```python menu.py```
+
+
 ### Porównywanie produktów
 Skrypt porównuje informacje o produktach w dwóch sklepach (ilości, nazwy, dostepności, dostawy, zestawy produktów, duplikaty nazw produktów, atrybuty: active, stock, price, availability, delivery).
 
@@ -88,5 +94,23 @@ Dostępne opcje:
 * offline - załaduj informacje o produktach z pliku (pliki zapisywane są automatycznie)
 * active - ściągaj informacje tylko o aktywnych produktach
 * change - wprowadzaj zmiany (bez tej opcji skrypt tylko wyświetla możliwe zmiany)
+
+### Kopiowanie stanów produktów z wybranego sklepu na konto Allegro
+Skrypt kopiuje stany produktów z wybranego sklepu na konto Allegro.
+
+```python copy_auction_stocks.py domena [offline] [change]```
+
+domena - np. google.pl
+
+Dostępne opcje:
+* offline - załaduj informacje o produktach z pliku (pliki zapisywane są automatycznie)
+* change - wprowadzaj zmiany (bez tej opcji skrypt tylko wyświetla możliwe zmiany)
+
+### Logowanie do Allegro
+Skrypt wykorzystuje client_id oraz client_secret zarejestrowanej w Allegro aplikacji (https://apps.developer.allegro.pl) do wygenerowania kodu urządzenia. Uwierzytelniony użytkownik Allegro musi zezwolić urządzeniu na dostęp do konta (wykorzystując link wygenerowany przez skrypt). Po udzieleniu dostępu, skrypt pobiera token umożliwiający zarządzanie produktami w Allegro i zapisuje go do pliku. Token jest ważny 12h, w przypadku jego unieważnienia jest odświeżany przez dowolny skrypt korzystający z tokena (token odświeżający ma ważność 3 miesiące od ostatniego odświeżenia).
+
+```python login_allegro.py domena```
+
+domena - np. google.pl
 
 

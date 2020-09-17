@@ -1,4 +1,4 @@
-import sys,requests,re,json,time,pickle,time,os,smtplib,xlwt,xlrd,datetime
+import sys,requests,re,json,time,pickle,time,os,smtplib,xlwt,xlrd,datetime,uuid
 from math import ceil
 from creds import * #pages=[['domain','user','pass','token'], ['','','','']]
 from colorama import Fore, init 
@@ -19,7 +19,18 @@ else:
     verify=True
 
 products_per_request = 50   #MAX 50 (https://developers.shoper.pl/developers/api/resources/products/list)
-requests_per_bulk = 25  #MAX 25 (https://developers.shoper.pl/developers/api/bulk) 
+requests_per_bulk = 25  #MAX 25 (https://developers.shoper.pl/developers/api/bulk)
+
+#Loading Allegro tokens
+if not (os.path.isdir('data')):
+    os.mkdir('data')
+for page in pages:
+    if not os.path.isfile('data/allegro_token_'+page[0]):
+        print(Fore.RED+'[-] Allegro token doesn\'t exist: ' + page[0])
+    else:
+        page[6],page[7],page[8] = pickle.load(open('data/allegro_token_'+page[0], 'rb'))
+        print(Fore.GREEN+'[+] Allegro token loaded: ' + page[0])
+
 #############################################
 ################## LOGIN ####################
 #############################################
@@ -269,24 +280,29 @@ def load_data(from_file=False,active_only=False):
                     api_get_products(pages[0][0],pages[0][3],availabilities[0],deliveries[0],active_only),
                     api_get_products(pages[1][0],pages[1][3],availabilities[1],deliveries[1],active_only)  
                  ]
+        auctions=[
+                    get_auctions(pages[0][0],pages[0][3]),
+                    get_auctions(pages[1][0],pages[1][3])
+                 ]
 
         #SAVING TO FILE
-        save_products((products[0],availabilities[0],deliveries[0]),pages[0][0])
-        save_products((products[1],availabilities[1],deliveries[1]),pages[1][0])
+        save_products((products[0],availabilities[0],deliveries[0],auctions[0]),pages[0][0])
+        save_products((products[1],availabilities[1],deliveries[1],auctions[1]),pages[1][0])
     else:
         #LOADING PRODUCTS FROM FILE
-        products1,availabilities1,deliveries1 = load_products(pages[0][0])
-        products2,availabilities2,deliveries2 = load_products(pages[1][0])
+        products1,availabilities1,deliveries1,auctions1 = load_products(pages[0][0])
+        products2,availabilities2,deliveries2,auctions2 = load_products(pages[1][0])
         products=[products1,products2]
         availabilities=[availabilities1,availabilities2]
         deliveries=[deliveries1,deliveries2]
+        auctions=[auctions1,auctions2]
         pages[0][3] = api_login(pages[0][0],pages[0][1],pages[0][2]) #TOKEN1
         pages[1][3] = api_login(pages[1][0],pages[1][1],pages[1][2]) #TOKEN2
 
     name_dict1 = create_name_dict(products[0],pages[0][0]) #creating dictionary without duplicates, name oriented
     name_dict2 = create_name_dict(products[1],pages[1][0]) #creating dictionary without duplicates, name oriented
     print('###################\nData loaded in {} seconds.'.format(round(time.time()-start,3)))
-    return (products,availabilities,deliveries,name_dict1,name_dict2)
+    return (products,availabilities,deliveries,name_dict1,name_dict2,auctions)
 
 #############################################
 ############ COMPARING PRODUCTS #############
@@ -526,7 +542,7 @@ def copy_attribute(page1,page2,name_dict1,name_dict2,attribute,changes_file,prin
     return len(diffs)
     
 def create_past_data(filename,from_file,active_only):
-    products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
+    products,availabilities,deliveries,name_dict1,name_dict2,auctions = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
     equal = compare_products(products[0],products[1],name_dict1,name_dict2,pages[0][0],pages[1][0],availabilities[0],availabilities[1],deliveries[0],deliveries[1],['active','stock','availability_name','delivery_name'],True,False)
     if equal: #CREATE PAST DATA
         save_products((products[0],availabilities[0],deliveries[0]),filename)
@@ -805,11 +821,236 @@ def get_orders(page,token,date_from='',date_to=''): #returns order info
                 sys.exit(1)
     return orders
 
-'''
+
 #############################################
 ############### ALLEGRO STUFF ###############
 #############################################
-'''
+
+def allegro_api_login(page):
+    if page[4]!='' and page[5]!='':
+        creds=(page[4],page[5])
+        data = {'client_id':page[4]}
+    else: 
+        print(Fore.RED+'[!] Fill Allegro credentials first! (copy from https://apps.developer.allegro.pl)')
+    headers = {'User-Agent': ua, 'Content-Type':'application/x-www-form-urlencoded'}
+    #Downloading device code
+    try:
+        text=requests.post('https://allegro.pl/auth/oauth/device',data=data,auth=creds,headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+    if len(re.findall('device_code":"(.{32})"' ,text))>0:
+        device_code=re.findall('device_code":"(.{32})"' ,text)[0]
+        url=re.findall('verification_uri_complete":"(.*)?"' ,text)[0]
+        print(Fore.GREEN+'[+] Allegro device code received: '+page[0])
+    else:
+        print(Fore.RED+'[!] Allegro device code error: ' + page[0])
+        sys.exit(1)
+    print('COPY LINK AND PASTE IN BROWSER:', url)
+    input("Press ENTER after device authorization.\n=>")
+    #Downloading token
+    try:
+        j=requests.post('https://allegro.pl/auth/oauth/token?grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code&device_code=' + device_code,auth=creds,headers=headers,proxies=proxies,verify=verify).json()
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+
+    if 'access_token' in j and 'refresh_token' in j and 'expires_in' in j: 
+        at = j['access_token'] #valid 12h
+        rt = j['refresh_token'] #valid 3M
+        expires_in = j['expires_in']
+        print(Fore.GREEN+'[+] Allegro access token received: '+page[0])
+    else:
+        print(Fore.RED+'[!] Allegro access token error: ' + page[0])
+        sys.exit(1)
+    #Saving Allegro tokens
+    if not (os.path.isdir('data')):
+        os.mkdir('data')
+    filename='data/allegro_token_'+page[0]
+    timestamp = datetime.datetime.now().timestamp() + int(expires_in)
+    page[6]=at
+    page[7]=rt
+    page[8]=timestamp
+    pickle.dump((at,rt,timestamp), open(filename, 'wb'))
+    print(Fore.GREEN+'[+] Allegro access token saved: '+filename + ' (Expires ' + datetime.datetime.fromtimestamp(timestamp).strftime('%d-%m-%Y %H:%M:%S') + ')')
+    
+
+def allegro_refresh_token(page):
+    creds=(page[4],page[5])
+    headers = {'User-Agent': ua, 'Content-Type':'application/x-www-form-urlencoded'}
+    if page[7]!='':
+        try:
+            j=requests.post('https://allegro.pl/auth/oauth/token?grant_type=refresh_token&refresh_token=' + page[7],auth=creds,headers=headers,proxies=proxies,verify=verify).json()
+        except Exception as e:
+            print(Fore.RED+'[!] Connection error: ' + str(e))
+            sys.exit(1)
+        
+        if 'access_token' in j and 'refresh_token' in j and 'expires_in' in j: 
+            at = j['access_token'] #valid 12h
+            rt = j['refresh_token'] #valid 3M
+            expires_in = j['expires_in']
+            print(Fore.GREEN+'[+] Allegro access token refreshed: '+page[0])
+        else:
+            print(Fore.RED+'[!] Allegro refreshing token error: ' + page[0])
+            sys.exit(1)
+        #Saving Allegro tokens
+        if not (os.path.isdir('data')):
+            os.mkdir('data')
+        filename='data/allegro_token_'+page[0]
+        timestamp = datetime.datetime.now().timestamp() + int(expires_in)
+        page[6]=at
+        page[7]=rt
+        page[8]=timestamp
+        pickle.dump((at,rt,timestamp), open(filename, 'wb'))
+        print(Fore.GREEN+'[+] Allegro access token saved: '+filename + ' (Expires ' + datetime.datetime.fromtimestamp(timestamp).strftime('%d-%m-%Y %H:%M:%S') + ')')
+    else:    
+        print(Fore.RED+'[!] Refresh token not found: ' + page[0])
+
+def allegro_get_auction(page,auction_id):
+    if page[8]-datetime.datetime.now().timestamp() < 120: #Token expires in 120 seconds
+        print(Fore.RED+'[!] Token for ' + page[0] + ' expired! (Expires: ' + datetime.datetime.fromtimestamp(page[8]).strftime('%d-%m-%Y %H:%M:%S') + ')')
+        allegro_refresh_token(page)
+
+    headers = {
+                'User-Agent': ua,
+                'Authorization':'Bearer '+page[6],
+                'accept': 'application/vnd.allegro.public.v1+json',
+                'content-type': 'application/vnd.allegro.public.v1+json',
+            }
+    try:
+        r=requests.get('https://api.allegro.pl/sale/offers/'+auction_id,headers=headers,proxies=proxies,verify=verify)
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+    if 'stock' in r.json():
+        return r.text
+    else:
+        print(Fore.RED+'[-] Allegro auction '+auction_id+' doesn\'t exist! ('+page[0]+')')
+        return ''
+
+def allegro_set_stock(page,auction_id,old_stock,new_stock):
+    headers = {
+                'User-Agent': ua,
+                'Authorization':'Bearer '+page[6],
+                'accept': 'application/vnd.allegro.public.v1+json',
+                'content-type': 'application/vnd.allegro.public.v1+json',
+            }
+    text = allegro_get_auction(page,auction_id)
+    if text!='':
+        try:
+            j = json.loads(text)
+        except:
+            print(Fore.RED+'[-] Error parsing JSON (pages info)')
+            sys.exit(1)
+
+
+        if int(new_stock)>0:
+            url='https://api.allegro.pl/sale/offers/'+auction_id
+            data = re.sub('("stock":{"available":)\d+?(,)','\g<1>'+str(new_stock)+'\g<2>',text).encode('utf-8')
+        else:
+            url='https://api.allegro.pl/sale/offer-publication-commands/' + str(uuid.uuid4())
+            data = '{"publication":{"action":"END"},"offerCriteria":[{"offers":[{"id": "'+auction_id+'"}],"type": "CONTAINS_OFFERS"}]}'
+        try:
+            r=requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify)
+        except Exception as e:
+            print(Fore.RED+'[!] Connection error: ' + str(e))
+            sys.exit(1)
+        if j["publication"]["status"] == "ENDED" and int(new_stock) != 0: #ACTIVATE
+            url='https://api.allegro.pl/sale/offer-publication-commands/' + str(uuid.uuid4())
+            data = '{"publication":{"action":"ACTIVATE"},"offerCriteria":[{"offers":[{"id": "'+auction_id+'"}],"type": "CONTAINS_OFFERS"}]}'
+            try:
+                r2=requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify)
+            except Exception as e:
+                print(Fore.RED+'[!] Connection error: ' + str(e))
+                sys.exit(1)
+        if ('stock' in r.json() and r.json()['stock']['available']==int(new_stock)) or int(new_stock) == 0:
+            return True
+        else:
+            return False
+
+def allegro_get_auctions(page):
+    headers = {
+                'User-Agent': ua,
+                'Authorization':'Bearer '+page[6],
+                'accept': 'application/vnd.allegro.public.v1+json',
+                'content-type': 'application/vnd.allegro.public.v1+json',
+            }
+    try:
+        r=requests.get('https://api.allegro.pl/sale/offers?limit=1000',headers=headers,proxies=proxies,verify=verify)
+        print(Fore.GREEN+'[+] Allegro auctions downloaded (<1000): '+page[0])
+        return r
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+
+def get_auctions(page,token): #returns ordered products  
+    print(Fore.GREEN+'[+] Downloading auctions information from '+ page)
+    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
+
+    #Grabing info about auctions
+    text=''
+    for i in range(3):
+        try:
+            r = requests.get('https://'+page+'/webapi/rest/auctions?limit='+ str(products_per_request) + '&page=99999&filters={"finished": "0"}',headers=headers,proxies=proxies,verify=verify)
+        except Exception as e:
+            print(Fore.RED+'[!] Connection error: ' + str(e))
+            sys.exit(1)
+        if r.status_code == 200:
+            text=r.text
+            break
+        else:
+            print(Fore.YELLOW +'|Retrying {}|'.format(i),end='')
+            time.sleep(1)
+
+    try:
+        j = json.loads(text)
+        count=j['count']
+        pages=j['pages']
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
+
+    #Downloading auctions info
+    requests_count=int(pages)
+    auctions=[]
+
+    for i in range(1,requests_count+1):
+        print('[i] {}\t{}/{} '.format(page,i,requests_count))
+        if i != 0: #Page 0 returns the same results as page 1 
+            for i in range(3):
+                try:
+                    r = requests.get('https://'+page+'/webapi/rest/auctions?limit='+str(products_per_request)+'&page='+str(i)+'&filters={"finished": "0"}',headers=headers,proxies=proxies,verify=verify)
+                except Exception as e:
+                    print(Fore.RED+'[!] Connection error: ' + str(e))
+                    sys.exit(1)
+                if r.status_code == 200:
+                    text=r.text
+                    break
+                else:
+                    print(Fore.YELLOW +'|Retrying {}|'.format(i),end='')
+                    time.sleep(1)
+            try:
+                j = json.loads(text)
+            except:
+                print(Fore.RED+'[-] Error parsing JSON (pages info)')
+                sys.exit(1)
+            
+            if len(j['list'])>0:
+                for auction in j['list']:
+                    a = {
+                        'auction_id':auction['auction_id'],
+                        'real_auction_id':auction['real_auction_id'],
+                        'auction_house_id':auction['auction_house_id'],
+                        'sales_format':auction['sales_format'],
+                        'title':auction['title'],
+                        'product_id':auction['product_id'],
+                        'quantity':auction['quantity'],
+                        }
+                    auctions.append(a)
+     
+
+    return auctions
+
 '''
 https://api.allegro.pl
 https://api.allegro.pl/offers/listing?category.id=...

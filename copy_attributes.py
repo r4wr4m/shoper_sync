@@ -13,7 +13,7 @@ if 'change' in sys.argv:
     change=True
 print_only=not change
 
-products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
+products,availabilities,deliveries,name_dict1,name_dict2,auctions = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
 
 #Settings
 changes_file = changes_filename()

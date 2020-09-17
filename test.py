@@ -16,6 +16,10 @@ def test(page):
     #print_pretty_json(requests.get('https://'+page[0]+'/webapi/rest/attributes?filters={"name":"kod"}',headers=headers,proxies=proxies,verify=verify).text)
     #print_pretty_json(requests.get('https://'+page[0]+'/webapi/rest/availabilities',headers=headers,proxies=proxies,verify=verify).text)
     #print_pretty_json(requests.get('https://'+page[0]+'/webapi/rest/deliveries',headers=headers,proxies=proxies,verify=verify).text)
+    #print_pretty_json(requests.get('https://'+page[0]+'/webapi/rest/auctions?filters={"title":"Czosnek Ozdobny błękitny Caeruleum (5szt.)"}',headers=headers,proxies=proxies,verify=verify).text)
+    #print_pretty_json(requests.get('https://'+page[0]+'/webapi/rest/auctions/2',headers=headers,proxies=proxies,verify=verify).text)
+    #data = '{"real_auction_id": "9619741059","auction_house_id": "1"    ,"sales_format": "1","title": "Czosnek Ozdobny b\u0142\u0119kitny Caeruleum (5szt.)","product_id": "7042","quantity":14}'
+    #print_pretty_json(requests.put('https://'+page[0]+'/webapi/rest/auctions/',data=data.encode('utf-8'),headers=headers,proxies=proxies,verify=verify).text)
     #print(get_availabilities(page,token))
     #print(get_deliveries(page,token))
     
@@ -25,12 +29,24 @@ def test(page):
     #update_value(pages[1][0],pages[1][3],7169,'availability_id',6)
     #update_value(pages[1][0],pages[1][3],7169,'delivery_id',8)
     #update_value(pages[1][0],pages[1][3],7169,'price',8)
+    #a = get_auctions(page[0],token)
+    #for i in a:
+    #    print(i)
+    #print(len(a))
 
 #products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file=False) #load_data(active_only=False,from_file=False)
 
-test(pages[1])
-write2file(changes_filename(),'TEST')
-write2file(changes_filename(),'TEST2')
+#test(pages[0])
+products,availabilities,deliveries,name_dict1,name_dict2,auctions = load_data(True,False) #load_data(active_only=False,from_file=False)
+#auctions = get_auctions(pages[0][0],pages[0][3])
+#print(auctions[0][0]['real_auction_id'])
+a = allegro_set_stock(pages[0],'9545005146',0,3)
+#print_pretty_json(a)
+#allegro_api_login(pages[1])
+#allegro_refresh_token(pages[0])
+
+#write2file(changes_filename(),'TEST')
+#write2file(changes_filename(),'TEST2')
 '''
 
 import smtplib

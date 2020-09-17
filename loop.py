@@ -1,5 +1,5 @@
 import os,time
-logpath='log/'
+logpath='logs/'
 
 interval=5 #minutes
 iteration=0

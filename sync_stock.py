@@ -5,6 +5,7 @@ past_data_filename='past_data'
 from_file=False
 active_only=False
 change=False
+allegro=False
 
 if 'offline' in sys.argv:
     from_file=True
@@ -12,6 +13,8 @@ if 'active' in sys.argv:
     active_only=True
 if 'change' in sys.argv:
     change=True
+if 'allegro' in sys.argv:
+    allegro=True
 print_only=not change
 if 'delete' in sys.argv:
     delete_past_data(past_data_filename)
@@ -29,7 +32,7 @@ if not os.path.isfile('data/'+past_data_filename): # IF PAST DATA DOESN'T EXIST
 ############ PAST DATA EXISTS ###############
 #############################################
 past_products,past_availabilities,past_deliveries = load_products(past_data_filename)
-products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
+products,availabilities,deliveries,name_dict1,name_dict2,auctions = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
 past_name_dict = create_name_dict(past_products,'PAST DATA') #creating dictionary without duplicates, name oriented
 
 print(Fore.BLUE+'###################\nCOMPARING DATA\n###################')
@@ -125,5 +128,17 @@ if data_updated:
 if email_text != '' and mail_creds[0] != '' and mail_creds[1] != '':
     send_mail(mail_creds,to,email_text)
 
+if allegro:
+    args = ''
+    if from_file:
+        args += ' offline'
+    if change:
+        args += ' change'
+    cmd1 = 'python3 copy_auction_stocks.py ' + pages[0][0] + args
+    cmd2 = 'python3 copy_auction_stocks.py ' + pages[1][0] + args
+    print(cmd1)
+    print(cmd2)
+    os.system(cmd1)
+    os.system(cmd2)
 
 print('###################\nDone in {} seconds.'.format(round(time.time()-start,3)))

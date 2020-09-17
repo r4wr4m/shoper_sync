@@ -18,7 +18,7 @@ else:
     sys.exit(0)
 
 #Load products information
-products,availabilities,deliveries,name_dict1,name_dict2 = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
+products,availabilities,deliveries,name_dict1,name_dict2,auctions = load_data(from_file,active_only) #load_data(active_only=False,from_file=False)
 page=None
 if domain == pages[0][0]:
             page=pages[0]

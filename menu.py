@@ -54,10 +54,12 @@ while True:
     print('6. Zapisać nazwy produktów do pliku')
     print('7. Zapisać zamówione produkty (z paszportami roślin) do pliku')
     print('8. Zapisać w sklepie paszporty roślin z pliku')
-    print('9. Usunąć zapisane w przeszłości dane (dane są potrzebne do synchronizacji)')
+    print('9. Skopiować stany ze sklepu do Allegro')
+    print('10. Zalogować do Allegro')
+    print('11. Usunąć zapisane w przeszłości dane (dane są potrzebne do synchronizacji)')
     print('0. Nic')
     choice = input('=>')
-    if choice not in ['1','2','3','4','5','6','7','8','9','0']:
+    if choice not in ['1','2','3','4','5','6','7','8','9','10','11','0']:
         print('Nie ma takiej opcji')
         continue
     print("=======================================")
@@ -135,6 +137,21 @@ while True:
         print(cmd + ' ' + domain + args)
         os.system(cmd + ' ' + domain + args)
     if choice == '9':
+        cmd += ' copy_auction_stocks.py' #python copy_auction_stocks.py domena [offline] [change]
+        domain = input('Podaj domenę sklepu (np. google.com)\n=>')
+        args = get_args([
+            ('offline','Czy wczytać dane o produktach z pliku?'),
+            ('change','Czy wprowadzać zmiany w sklepie?')])
+        print("=======================================")
+        print(cmd + ' ' + domain + args)
+        os.system(cmd + ' ' + domain + args)
+    if choice == '10':
+        cmd += ' login_allegro.py' #python copy_auction_stocks.py domena [offline] [change]
+        domain = input('Podaj domenę sklepu (np. google.com)\n=>')
+        print("=======================================")
+        print(cmd + ' ' + domain)
+        os.system(cmd + ' ' + domain)
+    if choice == '11':
         b = ''
         while b not in ['t','n']:
             b = input('Czy NA PEWNO usunąć dane z przeszłości?? (t/n)\n(dane są potrzebne do synchonizacji)\n=>')
