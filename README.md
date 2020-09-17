@@ -48,6 +48,7 @@ Dostępne opcje:
 * offline - załaduj informacje o produktach z pliku (pliki zapisywane są automatycznie)
 * active - ściągaj informacje tylko o aktywnych produktach
 * change - wprowadzaj zmiany (bez tej opcji skrypt tylko wyświetla możliwe zmiany)
+* allegro - wprowadzaj zmiany na aukcjach Allegro
 * delete - usuń informację zapisane wcześniej informacje o produktach
 
 ### Generowanie faktury

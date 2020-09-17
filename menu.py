@@ -88,6 +88,7 @@ while True:
         args = get_args([
             ('offline','Czy wczytać dane o produktach z pliku?'),
             ('active','Czy brać pod uwagę tylko aktywne produkty?'),
+            ('allegro','Czy zmieniać stany na aukcjach Allegro?'),
             ('change','Czy wprowadzać zmiany w sklepach?')])
         print("=======================================")
         print(cmd+args)
