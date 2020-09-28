@@ -907,10 +907,6 @@ def allegro_refresh_token(page):
         print(Fore.RED+'[!] Refresh token not found: ' + page[0])
 
 def allegro_get_auction(page,auction_id):
-    if page[8]-datetime.datetime.now().timestamp() < 120: #Token expires in 120 seconds
-        print(Fore.RED+'[!] Token for ' + page[0] + ' expired! (Expires: ' + datetime.datetime.fromtimestamp(page[8]).strftime('%d-%m-%Y %H:%M:%S') + ')')
-        allegro_refresh_token(page)
-
     headers = {
                 'User-Agent': ua,
                 'Authorization':'Bearer '+page[6],
@@ -977,6 +973,7 @@ def allegro_get_auctions(page):
             }
     try:
         r=requests.get('https://api.allegro.pl/sale/offers?limit=1000',headers=headers,proxies=proxies,verify=verify)
+        #r=requests.get('https://api.allegro.pl/sale/offers?limit=1000&publication.status=ACTIVE',headers=headers,proxies=proxies,verify=verify)
         print(Fore.GREEN+'[+] Allegro auctions downloaded (<1000): '+page[0])
         return r
     except Exception as e:
@@ -991,7 +988,7 @@ def get_auctions(page,token): #returns ordered products
     text=''
     for i in range(3):
         try:
-            r = requests.get('https://'+page+'/webapi/rest/auctions?limit='+ str(products_per_request) + '&page=99999&filters={"finished": "0"}',headers=headers,proxies=proxies,verify=verify)
+            r = requests.get('https://'+page+'/webapi/rest/auctions?limit='+ str(products_per_request) + '&page=99999&filters={"finished":"0"}',headers=headers,proxies=proxies,verify=verify)
         except Exception as e:
             print(Fore.RED+'[!] Connection error: ' + str(e))
             sys.exit(1)
@@ -1017,9 +1014,9 @@ def get_auctions(page,token): #returns ordered products
     for i in range(1,requests_count+1):
         print('[i] {}\t{}/{} '.format(page,i,requests_count))
         if i != 0: #Page 0 returns the same results as page 1 
-            for i in range(3):
+            for trial in range(3):
                 try:
-                    r = requests.get('https://'+page+'/webapi/rest/auctions?limit='+str(products_per_request)+'&page='+str(i)+'&filters={"finished": "0"}',headers=headers,proxies=proxies,verify=verify)
+                    r = requests.get('https://'+page+'/webapi/rest/auctions?limit='+str(products_per_request)+'&page='+str(i)+'&filters={"finished":"0"}',headers=headers,proxies=proxies,verify=verify)
                 except Exception as e:
                     print(Fore.RED+'[!] Connection error: ' + str(e))
                     sys.exit(1)
@@ -1051,10 +1048,14 @@ def get_auctions(page,token): #returns ordered products
 
     return auctions
 
-'''
-https://api.allegro.pl
-https://api.allegro.pl/offers/listing?category.id=...
-'''
+#REFRESHING ALLEGRO TOKENS
+if pages[0][8]-datetime.datetime.now().timestamp() < 120: #Token expires in 120 seconds
+    print(Fore.RED+'[!] Token for ' + pages[0][0] + ' expired! (Expires: ' + datetime.datetime.fromtimestamp(pages[0][8]).strftime('%d-%m-%Y %H:%M:%S') + ')')
+    allegro_refresh_token(pages[0])
+if pages[1][8]-datetime.datetime.now().timestamp() < 120: #Token expires in 120 seconds
+    print(Fore.RED+'[!] Token for ' + pages[1][0] + ' expired! (Expires: ' + datetime.datetime.fromtimestamp(pages[1][8]).strftime('%d-%m-%Y %H:%M:%S') + ')')
+    allegro_refresh_token(pages[1])
+
 #############################################
 ################ EXCEL STUFF ################
 #############################################

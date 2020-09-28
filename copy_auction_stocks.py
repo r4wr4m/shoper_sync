@@ -45,9 +45,11 @@ allegro_auctions = allegro_get_auctions(page).json()
 if 'count' in allegro_auctions and allegro_auctions['count'] > 0:
     print(Fore.GREEN+'[+] Downloaded {} auctions'.format(len(allegro_auctions['offers'])))
     allegro_auctions=allegro_auctions['offers']
-    for auction in auctions:
+    print("[i] Auctions on Shoper:", len(auctions))
+    print("[i] Auctions on Allegro:", len(allegro_auctions))
+    for auction in auctions: #shoper_auctions
         paired=False
-        for allegro_auction in allegro_auctions:
+        for allegro_auction in allegro_auctions: 
             if auction['real_auction_id'] == allegro_auction['id']:
                 product={}
                 for p in products:
@@ -61,10 +63,10 @@ if 'count' in allegro_auctions and allegro_auctions['count'] > 0:
                 if int(shoper_stock) != int(allegro_stock):
                     changes+=1
                     if active == "ENDED":
-                        text='[i] Changing stock in Allegro ({}) {}->{} ({}) https://allegro.pl/oferta/{}'.format(page[0],allegro_stock,shoper_stock,product['name'],auction['real_auction_id'])
+                        text='[i] {} Changing stock in Allegro ({}) {}->{} ({}) https://allegro.pl/oferta/{}'.format(changes,page[0],allegro_stock,shoper_stock,product['name'],auction['real_auction_id'])
                         text+='\n[i] Activating auction - stock may not be updated!'
                     else:
-                        text='[i] Changing stock in Allegro ({}) {}->{} ({}) https://allegro.pl/oferta/{}'.format(page[0],allegro_stock,shoper_stock,product['name'],auction['real_auction_id'])
+                        text='[i] {} Changing stock in Allegro ({}) {}->{} ({}) https://allegro.pl/oferta/{}'.format(changes,page[0],allegro_stock,shoper_stock,product['name'],auction['real_auction_id'])
                     print(text,end='')
                     write2file(changes_file,text)
                     if change:
