@@ -60,6 +60,8 @@ if 'count' in allegro_auctions and allegro_auctions['count'] > 0:
                 shoper_stock = product['stock']
                 allegro_stock = allegro_auction['stock']['available']
                 active = allegro_auction["publication"]["status"]
+                if active == "ENDED":
+                    allegro_stock = 0
                 if int(shoper_stock) != int(allegro_stock):
                     changes+=1
                     if active == "ENDED":
