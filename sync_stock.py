@@ -7,6 +7,21 @@ active_only=False
 change=False
 allegro=False
 
+pythoncmd=''
+for cmd in ['python3','python']:
+    try:
+        p = subprocess.Popen([cmd, '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = p.communicate()
+        outerr=(out+err).decode("utf-8") 
+        if outerr[:6]=='Python':
+            if outerr[7]=='3':
+                pythoncmd = cmd
+    except:
+        pass
+if pythoncmd=='':
+    print('Python 3 not found!')
+    sys.exit(1)
+
 if 'offline' in sys.argv:
     from_file=True
 if 'active' in sys.argv:
@@ -134,8 +149,8 @@ if allegro:
         args += ' offline'
     if change:
         args += ' change'
-    cmd1 = 'python3 copy_auction_stocks.py ' + pages[0][0] + args
-    cmd2 = 'python3 copy_auction_stocks.py ' + pages[1][0] + args
+    cmd1 = pythoncmd + ' copy_auction_stocks.py ' + pages[0][0] + args
+    cmd2 = pythoncmd + ' copy_auction_stocks.py ' + pages[1][0] + args
     print(cmd1)
     print(cmd2)
     os.system(cmd1)
