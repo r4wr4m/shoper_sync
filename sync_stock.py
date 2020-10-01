@@ -147,8 +147,7 @@ if email_text != '' and mail_creds[0] != '' and mail_creds[1] != '':
 
 if allegro:
     args = ''
-    if from_file:
-        args += ' offline'
+    args += ' offline'
     if change:
         args += ' change'
     cmd1 = pythoncmd + ' copy_auction_stocks.py ' + pages[0][0] + args
