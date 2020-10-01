@@ -17,6 +17,7 @@ for cmd in ['python3','python']:
         if outerr[:6]=='Python':
             if outerr[7]=='3':
                 pythoncmd = cmd
+                break
     except:
         pass
 if pythoncmd=='':
