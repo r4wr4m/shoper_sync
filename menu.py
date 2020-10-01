@@ -3,13 +3,12 @@ import os,sys,subprocess
 #Python 3 detection
 pythoncmd=''
 for cmd in ['python3','python']:
-    try:
-        p = subprocess.Popen([cmd, '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        out, err = p.communicate()
-        outerr=(out+err).decode("utf-8") 
-        if outerr[:6]=='Python':
-            if outerr[7]=='3':
-                pythoncmd = cmd
+    p = subprocess.Popen([cmd, '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    out, err = p.communicate()
+    outerr=(out+err).decode("utf-8") 
+    if outerr[:6]=='Python':
+        if outerr[7]=='3':
+            pythoncmd = cmd
 if pythoncmd=='':
     print('Python 3 not found!')
     sys.exit(1)
