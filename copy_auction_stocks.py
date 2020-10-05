@@ -36,7 +36,7 @@ if not page:
 
 
 #Settings
-changes_file = changes_filename()
+changes_file = changes_filename(domain)
 write2file(changes_file,'CHANGING VALUES: '+str(change))
 print(Fore.BLUE+'###################\nCOPYING STOCKS FROM {} TO ALLEGRO\n###################'.format(page[0]))
 changes=0
