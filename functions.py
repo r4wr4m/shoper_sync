@@ -1113,7 +1113,7 @@ def changes_filename(domain=''):
     filename = datetime.datetime.now().strftime('%Y%m%d_%H%M%S_changes')
     if domain!='':
         filename+='_'+domain
-    filename = 'logs/changes' + filename + '.txt'
+    filename = 'logs/' + filename + '.txt'
     return filename
 
 def write2file(filename,text):
