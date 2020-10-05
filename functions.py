@@ -1107,10 +1107,12 @@ def send_mail(mail_creds,to,text):
     except Exception as e:
         print(Fore.RED + '[-] Email not sent: ' + str(e))
 
-def changes_filename():
+def changes_filename(domain=''):
     if not os.path.isdir('logs'):
         os.mkdir('logs')
-    filename = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    filename = datetime.datetime.now().strftime('%Y%m%d_%H%M%S_changes')
+    if domain!='':
+        filename+='_'+domain
     filename = 'logs/changes' + filename + '.txt'
     return filename
 
