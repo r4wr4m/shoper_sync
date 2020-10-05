@@ -1049,12 +1049,14 @@ def get_auctions(page,token): #returns ordered products
     return auctions
 
 #REFRESHING ALLEGRO TOKENS
-if pages[0][8]-datetime.datetime.now().timestamp() < 120: #Token expires in 120 seconds
-    print(Fore.RED+'[!] Token for ' + pages[0][0] + ' expired! (Expires: ' + datetime.datetime.fromtimestamp(pages[0][8]).strftime('%d-%m-%Y %H:%M:%S') + ')')
-    allegro_refresh_token(pages[0])
-if pages[1][8]-datetime.datetime.now().timestamp() < 120: #Token expires in 120 seconds
-    print(Fore.RED+'[!] Token for ' + pages[1][0] + ' expired! (Expires: ' + datetime.datetime.fromtimestamp(pages[1][8]).strftime('%d-%m-%Y %H:%M:%S') + ')')
-    allegro_refresh_token(pages[1])
+if pages[0][8]!='':
+    if pages[0][8]-datetime.datetime.now().timestamp() < 120: #Token expires in 120 seconds
+        print(Fore.RED+'[!] Token for ' + pages[0][0] + ' expired! (Expires: ' + datetime.datetime.fromtimestamp(pages[0][8]).strftime('%d-%m-%Y %H:%M:%S') + ')')
+        allegro_refresh_token(pages[0])
+if pages[1][8]!='':
+    if pages[1][8]-datetime.datetime.now().timestamp() < 120: #Token expires in 120 seconds
+        print(Fore.RED+'[!] Token for ' + pages[1][0] + ' expired! (Expires: ' + datetime.datetime.fromtimestamp(pages[1][8]).strftime('%d-%m-%Y %H:%M:%S') + ')')
+        allegro_refresh_token(pages[1])
 
 #############################################
 ################ EXCEL STUFF ################
