@@ -142,6 +142,8 @@ for name in past_name_dict:
             email_text+=text+'\n'
 if data_updated:
     save_products((past_products,past_availabilities,past_deliveries),past_data_filename)
+    print('[i] Updating and saving product information')
+    products,availabilities,deliveries,name_dict1,name_dict2,auctions = load_data(from_file,active_only)
 if email_text != '' and mail_creds[0] != '' and mail_creds[1] != '':
     send_mail(mail_creds,to,email_text)
 
