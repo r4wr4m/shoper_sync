@@ -4,13 +4,15 @@ from InvoiceGenerator.pdf import SimpleInvoice
 from decimal import Decimal
 import datetime
 
-if len(sys.argv)==5:
+if len(sys.argv)==6:
     domain=sys.argv[1]
     order_number=sys.argv[2]
     invoice_number=sys.argv[3]
-    filename=sys.argv[4]
+    sys.argv[4]
+    invoice_date = datetime.datetime.strptime(sys.argv[4], '%d-%m-%Y')
+    filename=sys.argv[5]
 else:
-    print(Fore.RED+'[i] Usage:\n\t{} domain order_number invoice_number filename'.format(sys.argv[0]))
+    print(Fore.RED+'[i] Usage:\n\t{} domain order_number invoice_number invoice_date filename'.format(sys.argv[0]))
     sys.exit(0)
 
 
@@ -63,8 +65,6 @@ client = Client(clientname,
     bank_account='TestBankAccount', 
     bank_code='PL',
     note='TestNote\nTestNote', 
-    #vat_id='TestVatId', 
-    #ir='TestOrderInfo',
     logo_filename='', 
     vat_note='TestVatNote')
 
@@ -72,7 +72,9 @@ invoice = Invoice(client, provider, creator)
 invoice.currency = 'zł'
 invoice.currency_locale = 'pl_PL.UTF-8'
 invoice.number = invoice_number
-invoice.date = datetime.datetime.now()
+invoice.variable_symbol=order_info['payment_name']
+#invoice.date = datetime.datetime.now()
+invoice.date = invoice_date
 for product in ordered_products:
     invoice.add_item(Item(product['quantity'], product['price'], description=product['name'], unit=product['unit'], tax=Decimal(product['tax_value'])))
 invoice.add_item(Item(1, order_info['shipping_cost'], description='Dostawa ({})'.format(order_info['shipping_name']), unit='', tax=Decimal(order_info['shipping_tax_value'])))

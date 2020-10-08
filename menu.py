@@ -1,4 +1,4 @@
-import os,sys,subprocess
+import os,sys,subprocess,datetime
 
 #Python 3 detection
 pythoncmd=''
@@ -16,7 +16,15 @@ for cmd in ['python3','python']:
 if pythoncmd=='':
     print('Python 3 not found!')
     sys.exit(1)
-
+def get_date(text):
+    while True:
+        date=input(text)
+        try:
+            datetime.datetime.strptime(date, '%d-%m-%Y')
+            return date
+        except:
+            print("Nieprawidłowy format daty!")
+        
 def get_args(options): # [('arg1','description'), ... ]
     args = ''
     offline=False
@@ -99,10 +107,13 @@ while True:
         domain = input('Podaj domenę sklepu (np. google.com)\n=>')
         order_id = input('Podaj numer zamówienia\n=>')
         invoice_id = input('Podaj numer faktury\n=>')
+        invoice_date = get_date('Podaj datę wystawienia faktury w formacie dd-mm-yyyy\n=>')
+
+
         file = input('Podaj nazwę pliku, do którego zostanie zapisana faktura\n(bez rozszerzenia pliku)\n=>')
         print("=======================================")
-        print(cmd + domain + ' ' + order_id + ' ' + invoice_id + ' ' + file + '.pdf')
-        os.system(cmd + domain + ' ' + order_id + ' ' + invoice_id + ' ' + file + '.pdf')    
+        print(cmd + domain + ' ' + order_id + ' ' + invoice_id + ' ' + invoice_date + ' ' + file + '.pdf')
+        os.system(cmd + domain + ' ' + order_id + ' ' + invoice_id + ' ' + invoice_date + ' ' + file + '.pdf')    
     if choice == '5':
         cmd += ' install_polish_invoice.py'
         print("=======================================")

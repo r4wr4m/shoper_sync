@@ -633,6 +633,7 @@ def get_order_info(page,token,order_id): #returns order info
                 'sum':j['list'][0]['sum'],
                 'shipping_cost':j['list'][0]['shipping_cost'],
                 'shipping_name':get_shipping_name(page,token,j['list'][0]['shipping_id']),
+                'payment_name':get_payment_name(page,token,j['list'][0]['payment_id']),
                 'shipping_tax_value':j['list'][0]['shipping_tax_value'],
                 'delivery_address':
                     {
@@ -764,6 +765,26 @@ def get_shipping_name(page,token,shipping_id): #returns shipping name
         return j['list'][0]['translations']['pl_PL']['name']
     else:
         print(Fore.RED+'[!] Shipping id {} not found!' + str(shipping_id))
+        sys.exit(1)
+
+def get_payment_name(page,token,payment_id): #returns shipping name
+    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
+    try:
+        #{"filters":{"translations.pl_PL.active":"1"}
+        text = requests.get('https://'+page+'/webapi/rest/payments?filters={"payment_id":'+str(payment_id)+'}',headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+    print_pretty_json(text)
+    try:
+        j = json.loads(text)
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
+    if len(j['list'])>0:
+        return j['list'][0]['translations']['pl_PL']['title']
+    else:
+        print(Fore.RED+'[!] Payment id {} not found!' + str(payment_id))
         sys.exit(1)
 
 def get_orders(page,token,date_from='',date_to=''): #returns order info
