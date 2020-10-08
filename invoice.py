@@ -15,6 +15,8 @@ else:
     print(Fore.RED+'[i] Usage:\n\t{} domain order_number invoice_number invoice_date filename'.format(sys.argv[0]))
     sys.exit(0)
 
+
+
 start = time.time()
 
 os.environ["INVOICE_LANG"] = "pl"
@@ -49,17 +51,15 @@ print(Fore.GREEN+'[+] Order {} info downloaded from {}'.format(order_number,page
 clientname=''
 if order_info['billing_address']['company'] != '':
     clientname = order_info['billing_address']['company']
-if order_info['billing_address']['firstname'] !='':
-    if clientname != '':
-        clientname += '\n'
-    clientname +=order_info['billing_address']['firstname'] + ' ' + order_info['billing_address']['lastname']
+else:
+    clientname =order_info['billing_address']['firstname'] + ' ' + order_info['billing_address']['lastname']
 
 client = Client(clientname, 
     address=order_info['billing_address']['street1']+'\n'+order_info['billing_address']['street2'], 
     city=order_info['billing_address']['city'], 
     zip_code=order_info['billing_address']['postcode'],
-    phone=order_info['billing_address']['phone'],
-    email=order_info['email'], 
+    #phone=order_info['billing_address']['phone'],
+    #email=order_info['email'], 
     bank_name='TestBank', 
     bank_account='TestBankAccount', 
     bank_code='PL',
