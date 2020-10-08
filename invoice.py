@@ -15,6 +15,9 @@ else:
     print(Fore.RED+'[i] Usage:\n\t{} domain order_number invoice_number invoice_date filename'.format(sys.argv[0]))
     sys.exit(0)
 
+def inwords(price):
+
+    return str(price)
 
 start = time.time()
 
@@ -30,7 +33,7 @@ provider = Provider('My company',
     bank_account='01234567890123456789012345',
     bank_code='PL',
     note='TestNote\nTestNote', 
-    logo_filename='/home/user/Downloads/logo.png',
+    logo_filename='',
     vat_note='TestVatNote')
 creator = Creator('', stamp_filename='')
 
@@ -78,7 +81,7 @@ invoice.date = invoice_date
 for product in ordered_products:
     invoice.add_item(Item(product['quantity'], product['price'], description=product['name'], unit=product['unit'], tax=Decimal(product['tax_value'])))
 invoice.add_item(Item(1, order_info['shipping_cost'], description='Dostawa ({})'.format(order_info['shipping_name']), unit='', tax=Decimal(order_info['shipping_tax_value'])))
-
+invoice.specific_symbol=inwords(invoice.price)
 
 pdf = SimpleInvoice(invoice)
 pdf.gen(filename, generate_qr_code=False)
