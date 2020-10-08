@@ -15,10 +15,6 @@ else:
     print(Fore.RED+'[i] Usage:\n\t{} domain order_number invoice_number invoice_date filename'.format(sys.argv[0]))
     sys.exit(0)
 
-def inwords(price):
-
-    return str(price)
-
 start = time.time()
 
 os.environ["INVOICE_LANG"] = "pl"
