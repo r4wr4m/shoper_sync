@@ -406,7 +406,7 @@ class SimpleInvoice(BaseInvoice):
             self.pdf.setFont('DejaVu-Bold', 11)
             self.pdf.drawString((LEFT + 100) * mm, (TOP - i - 7) * mm, '%s: %s' % (_(u'Suma'), currency(self.invoice.price, self.invoice.currency, self.invoice.currency_locale)))
             self.pdf.setFont('DejaVu-Bold', 7)
-            self.pdf.drawString((LEFT + 100) * mm, (TOP - i - 10) * mm, '(%s: %s)' % (_(u'Słownie'),self.invoice.specific_symbol))
+            self.pdf.drawString((LEFT + 80) * mm, (TOP - i - 10) * mm, '(%s: %s)' % (_(u'Słownie'),self.invoice.specific_symbol))
         else:
             self.pdf.setFont('DejaVu-Bold', 6)
             self.pdf.drawString((LEFT + 1) * mm, (TOP - i - 2) * mm, _(u'Breakdown VAT'))
