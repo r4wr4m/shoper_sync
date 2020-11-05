@@ -250,12 +250,12 @@ class SimpleInvoice(BaseInvoice):
         ]
         if self.invoice.variable_symbol:
             lines.append(
-                '%s: %s' % (_(u'Variable symbol'), self.invoice.variable_symbol),
+                '%s: %s' % (_(u'Płatność'), self.invoice.variable_symbol),
             )
-        if self.invoice.specific_symbol:
-            lines.append(
-                '%s: %s' % (_(u'Specific symbol'), self.invoice.specific_symbol),
-            )
+        #if self.invoice.specific_symbol:
+        #    lines.append(
+        #        '%s: %s' % (_(u'Specific symbol'), self.invoice.specific_symbol),
+        #    )
         if self.invoice.iban:
             lines.append(
                 '%s: %s' % (_(u'IBAN'), self.invoice.iban),
@@ -405,6 +405,8 @@ class SimpleInvoice(BaseInvoice):
         if not items_are_with_tax:
             self.pdf.setFont('DejaVu-Bold', 11)
             self.pdf.drawString((LEFT + 100) * mm, (TOP - i - 7) * mm, '%s: %s' % (_(u'Suma'), currency(self.invoice.price, self.invoice.currency, self.invoice.currency_locale)))
+            self.pdf.setFont('DejaVu-Bold', 7)
+            self.pdf.drawString((LEFT + 80) * mm, (TOP - i - 10) * mm, '(%s: %s)' % (_(u'Słownie'),self.invoice.specific_symbol))
         else:
             self.pdf.setFont('DejaVu-Bold', 6)
             self.pdf.drawString((LEFT + 1) * mm, (TOP - i - 2) * mm, _(u'Breakdown VAT'))

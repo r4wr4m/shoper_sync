@@ -620,7 +620,7 @@ def get_order_info(page,token,order_id): #returns order info
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)
-    print_pretty_json(text)
+    #print_pretty_json(text)
     try:
         j = json.loads(text)
     except:
@@ -634,6 +634,7 @@ def get_order_info(page,token,order_id): #returns order info
                 'sum':j['list'][0]['sum'],
                 'shipping_cost':j['list'][0]['shipping_cost'],
                 'shipping_name':get_shipping_name(page,token,j['list'][0]['shipping_id']),
+                'payment_name':get_payment_name(page,token,j['list'][0]['payment_id']),
                 'shipping_tax_value':j['list'][0]['shipping_tax_value'],
                 'delivery_address':
                     {
@@ -765,6 +766,26 @@ def get_shipping_name(page,token,shipping_id): #returns shipping name
         return j['list'][0]['translations']['pl_PL']['name']
     else:
         print(Fore.RED+'[!] Shipping id {} not found!' + str(shipping_id))
+        sys.exit(1)
+
+def get_payment_name(page,token,payment_id): #returns shipping name
+    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
+    try:
+        #{"filters":{"translations.pl_PL.active":"1"}
+        text = requests.get('https://'+page+'/webapi/rest/payments?filters={"payment_id":'+str(payment_id)+'}',headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+    #print_pretty_json(text)
+    try:
+        j = json.loads(text)
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
+    if len(j['list'])>0:
+        return j['list'][0]['translations']['pl_PL']['title']
+    else:
+        print(Fore.RED+'[!] Payment id {} not found!' + str(payment_id))
         sys.exit(1)
 
 def get_orders(page,token,date_from='',date_to=''): #returns order info
@@ -1119,3 +1140,47 @@ def changes_filename(domain=''):
 def write2file(filename,text):
     with open(filename, 'a') as file:
         file.write(text + '\n')
+
+def inwords(price):
+    def number2word(number):
+        words=[
+                ['jeden','dwa','trzy','cztery','pięć','sześć','siedem','osiem','dziewięć'],
+                ['dziesięć','dwadzieścia','trzydzieści','czterdzieści','pięćdziesiąt','sześćdziesiąt','siedemdziesiąt','osiemdziesiąt','dziewięćdziesiąt'],
+                ['sto','dwieście','trzysta','czterysta','pięćset','sześćset','siedemset','osiemset','dziewięćset'],
+                ['tysiąc','dwa tysiące','trzy tysiące','cztery tysiące','pięć tysięcy','sześć tysięcy','siedem tysięcy','osiem tysięcy','dziewięć tysięcy'],
+                ['dziesięć','jedenaście','dwanaście','trzynaście','czternaście','piętnaście','szesnaście','siedemnaście','osiemnaście','dziewiętnaście'],
+            ]
+        if number >=10000:
+            print(Fore.RED+'[!] Price too big!')
+            sys.exit(1)
+        text=''
+        for zeros in [3,2,1,0]:
+            magnitude=10**zeros
+            if number >= magnitude:
+                if text != '':
+                    text += ' '
+                if zeros == 1 and number >=11.0 and number < 20.0: #naście
+                    text += words[4][int(number-magnitude)]
+                    number -= int(number)
+                    break
+                else:
+                    text += words[zeros][int(number/magnitude)-1]
+                    number -= int(number/magnitude)*magnitude
+        return text
+
+    def currency(number,big):
+        if big:
+            words = ['złoty','złote','złotych']
+        else:
+            words = ['grosz','grosze','groszy']
+        twolast = number - int(number/100)*100
+        last = number - int(number/10)*10
+        if twolast == 1:
+            return words[0]
+        if (twolast < 10 or twolast > 20) and last > 1 and last < 5:
+            return words[1]
+        return words[2]
+
+    big=int(price)
+    small=int(round(price-int(price),2)*100)
+    return '{} {} {} {}'.format(number2word(big),currency(big,True),number2word(small),currency(small,False))
