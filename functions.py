@@ -10,6 +10,7 @@ init(autoreset=True)
 #############################################
 ua = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Safari/537.36'
 headers = {'User-Agent': ua}
+timeout=120
 proxy=False
 if proxy:
     proxies = {'http': 'http://127.0.0.1:8080','https':'http://127.0.0.1:8080'}
@@ -38,7 +39,7 @@ def api_login(page,usr,pwd): #returns token
     creds={'client_id':usr, 'client_secret': pwd}
     headers = {'User-Agent': ua}
     try:
-        login=requests.post('https://'+page+'/webapi/rest/auth',data=creds,headers=headers,proxies=proxies,verify=verify).text
+        login=requests.post('https://'+page+'/webapi/rest/auth',data=creds,headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)
@@ -124,7 +125,7 @@ def api_get_products(page,token,availabilities,deliveries,active_only=False): #r
     print(Fore.GREEN+'[+] Downloading product information from '+ page)
     #Grabbing info about pages
     try:
-        text=requests.get('https://'+page+'/webapi/rest/product-stocks?limit={}&page=99999'.format(products_per_request),headers=headers,proxies=proxies,verify=verify).text
+        text=requests.get('https://'+page+'/webapi/rest/product-stocks?limit={}&page=99999'.format(products_per_request),headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)    
@@ -137,7 +138,7 @@ def api_get_products(page,token,availabilities,deliveries,active_only=False): #r
         sys.exit(1)
     #Grabbing the id of passport attribute 
     try:
-        text=requests.get('https://'+page+'/webapi/rest/attributes?filters={"name":"kod"}',headers=headers,proxies=proxies,verify=verify).text
+        text=requests.get('https://'+page+'/webapi/rest/attributes?filters={"name":"kod"}',headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)    
@@ -172,7 +173,7 @@ def api_get_products(page,token,availabilities,deliveries,active_only=False): #r
         request_body+=']'
         data_size+=len(request_body)
         try:
-            text = requests.post('https://'+page+'/webapi/rest/bulk',data=request_body,headers=headers,proxies=proxies,verify=verify).text
+            text = requests.post('https://'+page+'/webapi/rest/bulk',data=request_body,headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
         except Exception as e:
             print(Fore.RED+'[!] Connection error: ' + str(e))
             sys.exit(1)
@@ -201,7 +202,7 @@ def get_availabilities(page,token): #returns availabilities dictionary {name:id,
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
     dictionary={'null':'null'} #availability_id can be null
     try:
-        text = requests.get('https://'+page+'/webapi/rest/availabilities',headers=headers,proxies=proxies,verify=verify).text
+        text = requests.get('https://'+page+'/webapi/rest/availabilities',headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)
@@ -221,7 +222,7 @@ def get_deliveries(page,token): #returns deliveries dictionary {name:id, ...}
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
     dictionary={'null':'null'} #delivery_id can be null
     try:
-        text = requests.get('https://'+page+'/webapi/rest/deliveries',headers=headers,proxies=proxies,verify=verify).text
+        text = requests.get('https://'+page+'/webapi/rest/deliveries',headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)
@@ -495,7 +496,7 @@ def update_value(page,token,id,field,value):
     text=''
     for i in range(3):
         try:
-            r = requests.put('https://'+page+'/webapi/rest/products/'+str(id),data=fields[field],headers=headers,proxies=proxies,verify=verify)
+            r = requests.put('https://'+page+'/webapi/rest/products/'+str(id),data=fields[field],headers=headers,proxies=proxies,verify=verify,timeout=timeout)
         except Exception as e:
             print(Fore.RED+'[!] Connection error: ' + str(e))
             sys.exit(1)
@@ -592,7 +593,7 @@ def set_passport(page,token,product,passport,change): #returns ordered products
                     data = '{"attributes": {"'+product['attribute_category_id']+'": {"'+product['passport_attribute_id']+'": "'+passport+'"}}}'
                     data = '{"attributes": {"'+product['passport_attribute_id']+'": "'+passport+'"}}'
                     url = 'https://'+page+'/webapi/rest/products/'+str(product['id'])
-                    r = requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify)
+                    r = requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify,timeout=timeout)
                 except Exception as e:
                     print(Fore.RED+'[!] Connection error: ' + str(e))
                     sys.exit(1)
@@ -615,7 +616,7 @@ def get_order_info(page,token,order_id): #returns order info
     print(Fore.GREEN+'[+] Downloading order information from '+ page)
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
     try:
-        text = requests.get('https://'+page+'/webapi/rest/orders?filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify).text
+        text = requests.get('https://'+page+'/webapi/rest/orders?filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)
@@ -672,7 +673,7 @@ def get_ordered_products(page,token,order_id): #returns ordered products
     text=''
     for i in range(3):
         try:
-            r = requests.get('https://'+page+'/webapi/rest/order-products?limit='+ str(products_per_request) + '&page=99999&filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify)
+            r = requests.get('https://'+page+'/webapi/rest/order-products?limit='+ str(products_per_request) + '&page=99999&filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify,timeout=timeout)
         except Exception as e:
             print(Fore.RED+'[!] Connection error: ' + str(e))
             sys.exit(1)
@@ -700,7 +701,7 @@ def get_ordered_products(page,token,order_id): #returns ordered products
         if i != 0: #Page 0 returns the same results as page 1 
             for i in range(3):
                 try:
-                    r = requests.get('https://'+page+'/webapi/rest/order-products?limit='+str(products_per_request)+'&page='+str(i)+'&filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify)
+                    r = requests.get('https://'+page+'/webapi/rest/order-products?limit='+str(products_per_request)+'&page='+str(i)+'&filters={"order_id":'+str(order_id)+'}',headers=headers,proxies=proxies,verify=verify,timeout=timeout)
                 except Exception as e:
                     print(Fore.RED+'[!] Connection error: ' + str(e))
                     sys.exit(1)
@@ -750,7 +751,7 @@ def get_shipping_name(page,token,shipping_id): #returns shipping name
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
     try:
         #{"filters":{"translations.pl_PL.active":"1"}
-        text = requests.get('https://'+page+'/webapi/rest/shippings?filters={"shipping_id":'+str(shipping_id)+'}',headers=headers,proxies=proxies,verify=verify).text
+        text = requests.get('https://'+page+'/webapi/rest/shippings?filters={"shipping_id":'+str(shipping_id)+'}',headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)
@@ -771,7 +772,7 @@ def get_orders(page,token,date_from='',date_to=''): #returns order info
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
     #Grabing info about orders
     try:
-        text=requests.get('https://'+page+'/webapi/rest/orders?limit='+ str(products_per_request) + '&page=99999&filters={"date":{">=":"'+date_from+'","<=":"'+date_to+'"}}',headers=headers,proxies=proxies,verify=verify).text
+        text=requests.get('https://'+page+'/webapi/rest/orders?limit='+ str(products_per_request) + '&page=99999&filters={"date":{">=":"'+date_from+'","<=":"'+date_to+'"}}',headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)    
@@ -792,7 +793,7 @@ def get_orders(page,token,date_from='',date_to=''): #returns order info
         print('[i] {}\t{}/{} '.format(page,i,requests_count))
         if i != 0: #Page 0 returns the same results as page 1 
             try:
-                text = requests.get('https://'+page+'/webapi/rest/orders?limit='+ str(products_per_request) +'&page='+str(i)+'&filters={"date":{">=":"'+date_from+'","<=":"'+date_to+'"}}',headers=headers,proxies=proxies,verify=verify).text
+                text = requests.get('https://'+page+'/webapi/rest/orders?limit='+ str(products_per_request) +'&page='+str(i)+'&filters={"date":{">=":"'+date_from+'","<=":"'+date_to+'"}}',headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
             except Exception as e:
                 print(Fore.RED+'[!] Connection error: ' + str(e))
                 sys.exit(1)
@@ -835,7 +836,7 @@ def allegro_api_login(page):
     headers = {'User-Agent': ua, 'Content-Type':'application/x-www-form-urlencoded'}
     #Downloading device code
     try:
-        text=requests.post('https://allegro.pl/auth/oauth/device',data=data,auth=creds,headers=headers,proxies=proxies,verify=verify).text
+        text=requests.post('https://allegro.pl/auth/oauth/device',data=data,auth=creds,headers=headers,proxies=proxies,verify=verify,timeout=timeout).text
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)
@@ -850,7 +851,7 @@ def allegro_api_login(page):
     input("Press ENTER after device authorization.\n=>")
     #Downloading token
     try:
-        j=requests.post('https://allegro.pl/auth/oauth/token?grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code&device_code=' + device_code,auth=creds,headers=headers,proxies=proxies,verify=verify).json()
+        j=requests.post('https://allegro.pl/auth/oauth/token?grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code&device_code=' + device_code,auth=creds,headers=headers,proxies=proxies,verify=verify,timeout=timeout).json()
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)
@@ -880,11 +881,10 @@ def allegro_refresh_token(page):
     headers = {'User-Agent': ua, 'Content-Type':'application/x-www-form-urlencoded'}
     if page[7]!='':
         try:
-            j=requests.post('https://allegro.pl/auth/oauth/token?grant_type=refresh_token&refresh_token=' + page[7],auth=creds,headers=headers,proxies=proxies,verify=verify).json()
+            j=requests.post('https://allegro.pl/auth/oauth/token?grant_type=refresh_token&refresh_token=' + page[7],auth=creds,headers=headers,proxies=proxies,verify=verify,timeout=timeout).json()
         except Exception as e:
             print(Fore.RED+'[!] Connection error: ' + str(e))
             sys.exit(1)
-        
         if 'access_token' in j and 'refresh_token' in j and 'expires_in' in j: 
             at = j['access_token'] #valid 12h
             rt = j['refresh_token'] #valid 3M
@@ -914,7 +914,7 @@ def allegro_get_auction(page,auction_id):
                 'content-type': 'application/vnd.allegro.public.v1+json',
             }
     try:
-        r=requests.get('https://api.allegro.pl/sale/offers/'+auction_id,headers=headers,proxies=proxies,verify=verify)
+        r=requests.get('https://api.allegro.pl/sale/offers/'+auction_id,headers=headers,proxies=proxies,verify=verify,timeout=timeout)
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
         sys.exit(1)
@@ -947,7 +947,7 @@ def allegro_set_stock(page,auction_id,old_stock,new_stock):
             url='https://api.allegro.pl/sale/offer-publication-commands/' + str(uuid.uuid4())
             data = '{"publication":{"action":"END"},"offerCriteria":[{"offers":[{"id": "'+auction_id+'"}],"type": "CONTAINS_OFFERS"}]}'
         try:
-            r=requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify)
+            r=requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify,timeout=timeout)
         except Exception as e:
             print(Fore.RED+'[!] Connection error: ' + str(e))
             sys.exit(1)
@@ -955,7 +955,7 @@ def allegro_set_stock(page,auction_id,old_stock,new_stock):
             url='https://api.allegro.pl/sale/offer-publication-commands/' + str(uuid.uuid4())
             data = '{"publication":{"action":"ACTIVATE"},"offerCriteria":[{"offers":[{"id": "'+auction_id+'"}],"type": "CONTAINS_OFFERS"}]}'
             try:
-                r2=requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify)
+                r2=requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify,timeout=timeout)
             except Exception as e:
                 print(Fore.RED+'[!] Connection error: ' + str(e))
                 sys.exit(1)
@@ -972,8 +972,8 @@ def allegro_get_auctions(page):
                 'content-type': 'application/vnd.allegro.public.v1+json',
             }
     try:
-        r=requests.get('https://api.allegro.pl/sale/offers?limit=1000',headers=headers,proxies=proxies,verify=verify)
-        #r=requests.get('https://api.allegro.pl/sale/offers?limit=1000&publication.status=ACTIVE',headers=headers,proxies=proxies,verify=verify)
+        r=requests.get('https://api.allegro.pl/sale/offers?limit=1000',headers=headers,proxies=proxies,verify=verify,timeout=timeout)
+        #r=requests.get('https://api.allegro.pl/sale/offers?limit=1000&publication.status=ACTIVE',headers=headers,proxies=proxies,verify=verify,timeout=timeout)
         print(Fore.GREEN+'[+] Allegro auctions downloaded (<1000): '+page[0])
         return r
     except Exception as e:
@@ -988,7 +988,7 @@ def get_auctions(page,token): #returns ordered products
     text=''
     for i in range(3):
         try:
-            r = requests.get('https://'+page+'/webapi/rest/auctions?limit='+ str(products_per_request) + '&page=99999&filters={"finished":"0"}',headers=headers,proxies=proxies,verify=verify)
+            r = requests.get('https://'+page+'/webapi/rest/auctions?limit='+ str(products_per_request) + '&page=99999&filters={"finished":"0"}',headers=headers,proxies=proxies,verify=verify,timeout=timeout)
         except Exception as e:
             print(Fore.RED+'[!] Connection error: ' + str(e))
             sys.exit(1)
@@ -1016,7 +1016,7 @@ def get_auctions(page,token): #returns ordered products
         if i != 0: #Page 0 returns the same results as page 1 
             for trial in range(3):
                 try:
-                    r = requests.get('https://'+page+'/webapi/rest/auctions?limit='+str(products_per_request)+'&page='+str(i)+'&filters={"finished":"0"}',headers=headers,proxies=proxies,verify=verify)
+                    r = requests.get('https://'+page+'/webapi/rest/auctions?limit='+str(products_per_request)+'&page='+str(i)+'&filters={"finished":"0"}',headers=headers,proxies=proxies,verify=verify,timeout=timeout)
                 except Exception as e:
                     print(Fore.RED+'[!] Connection error: ' + str(e))
                     sys.exit(1)
