@@ -985,7 +985,7 @@ def allegro_set_stock(page,auction_id,old_stock,new_stock):
         else:
             return False
 
-def allegro_get_auctions(page):
+def allegro_get_auctions(page,offset):
     headers = {
                 'User-Agent': ua,
                 'Authorization':'Bearer '+page[6],
@@ -993,9 +993,9 @@ def allegro_get_auctions(page):
                 'content-type': 'application/vnd.allegro.public.v1+json',
             }
     try:
-        r=requests.get('https://api.allegro.pl/sale/offers?limit=1000',headers=headers,proxies=proxies,verify=verify,timeout=timeout)
+        r=requests.get('https://api.allegro.pl/sale/offers?limit=1000&offset='+offset,headers=headers,proxies=proxies,verify=verify,timeout=timeout)
         #r=requests.get('https://api.allegro.pl/sale/offers?limit=1000&publication.status=ACTIVE',headers=headers,proxies=proxies,verify=verify,timeout=timeout)
-        print(Fore.GREEN+'[+] Allegro auctions downloaded (<1000): '+page[0])
+        print(Fore.GREEN+'[+] Allegro auctions downloaded (offset: ' + offset + '): '+page[0])
         return r
     except Exception as e:
         print(Fore.RED+'[!] Connection error: ' + str(e))
