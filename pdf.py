@@ -182,7 +182,7 @@ class SimpleInvoice(BaseInvoice):
                 self.TOP*mm,
                 _(u'Taxable invoice num.: %s') % self.invoice.number,
             )
-
+    #Pierwszy prostokąt
     def _drawMain(self):
         # Borders
         self.pdf.rect(
@@ -193,7 +193,8 @@ class SimpleInvoice(BaseInvoice):
             stroke=True,
             fill=False,
         )
-
+        
+        #Linie w pierwszej tabelce
         path = self.pdf.beginPath()
         path.moveTo((self.LEFT + 88) * mm, (self.TOP - 3) * mm)
         path.lineTo((self.LEFT + 88) * mm, (self.TOP - 68) * mm)
@@ -250,7 +251,7 @@ class SimpleInvoice(BaseInvoice):
         ]
         if self.invoice.variable_symbol:
             lines.append(
-                '%s: %s' % (_(u'Płatność'), self.invoice.variable_symbol),
+                '%s: %s' % (_(u'Forma płatności'), self.invoice.variable_symbol),
             )
         #if self.invoice.specific_symbol:
         #    lines.append(
@@ -315,7 +316,7 @@ class SimpleInvoice(BaseInvoice):
                 _(u'Cena'),
             )
             self.pdf.drawString(
-                (LEFT + 150) * mm,
+                (LEFT + 152) * mm,
                 (TOP - i) * mm,
                 _(u'Wartość'),
             )
@@ -343,6 +344,10 @@ class SimpleInvoice(BaseInvoice):
             if will_wrap and TOP - i - i_add < 8 * mm:
                 will_wrap = False
                 self.pdf.rect(LEFT * mm, (TOP - i) * mm, (LEFT + 156) * mm, (i + 2) * mm, stroke=True, fill=False)  # 140,142
+                #Pionowe kreski
+                self.pdf.rect((LEFT + 100) * mm, (TOP - i) * mm, (LEFT + 56) * mm, (i-4) * mm, stroke=True, fill=False)  # 140,142
+                self.pdf.rect((LEFT + 120) * mm, (TOP - i) * mm, (LEFT + 36) * mm, (i-4) * mm, stroke=True, fill=False)  # 140,142
+                self.pdf.rect((LEFT + 149) * mm, (TOP - i) * mm, (LEFT + 7) * mm, (i-4) * mm, stroke=True, fill=False)  # 140,142
                 self.pdf.showPage()
 
                 i = self._drawItemsHeader(self.TOP, LEFT)
@@ -405,8 +410,6 @@ class SimpleInvoice(BaseInvoice):
         if not items_are_with_tax:
             self.pdf.setFont('DejaVu-Bold', 11)
             self.pdf.drawString((LEFT + 100) * mm, (TOP - i - 7) * mm, '%s: %s' % (_(u'Suma'), currency(self.invoice.price, self.invoice.currency, self.invoice.currency_locale)))
-            self.pdf.setFont('DejaVu-Bold', 7)
-            self.pdf.drawString((LEFT + 80) * mm, (TOP - i - 10) * mm, '(%s: %s)' % (_(u'Słownie'),self.invoice.specific_symbol))
         else:
             self.pdf.setFont('DejaVu-Bold', 6)
             self.pdf.drawString((LEFT + 1) * mm, (TOP - i - 2) * mm, _(u'Breakdown VAT'))
@@ -451,16 +454,32 @@ class SimpleInvoice(BaseInvoice):
             self.pdf.rect(LEFT * mm, (TOP - i - 17) * mm, (LEFT + 156) * mm, (i + 19) * mm, stroke=True, fill=False)  # 140,142
         else:
             self.pdf.rect(LEFT * mm, (TOP - i - 11) * mm, (LEFT + 156) * mm, (i + 13) * mm, stroke=True, fill=False)  # 140,142
+            #Pionowe kreski
+            self.pdf.rect((LEFT + 100) * mm, (TOP - i) * mm, (LEFT + 56) * mm, (i-4) * mm, stroke=True, fill=False)  # 140,142
+            self.pdf.rect((LEFT + 120) * mm, (TOP - i) * mm, (LEFT + 36) * mm, (i-4) * mm, stroke=True, fill=False)  # 140,142
+            self.pdf.rect((LEFT + 149) * mm, (TOP - i) * mm, (LEFT + 7) * mm, (i-4) * mm, stroke=True, fill=False)  # 140,142
 
         self._drawCreator(TOP - i - 20, self.LEFT + 98)
 
     def _drawCreator(self, TOP, LEFT):
-        height = 20*mm
+        height = 40*mm
         if self.invoice.creator.stamp_filename:
             im = Image.open(self.invoice.creator.stamp_filename)
             height = float(im.size[1]) / (float(im.size[0])/200.0)
             self.pdf.drawImage(self.invoice.creator.stamp_filename, (LEFT) * mm, (TOP - 2) * mm - height, 200, height, mask="auto")
-
+        
+        self.pdf.setFont('DejaVu-Bold', 7)
+        self.pdf.drawString((LEFT - 95 ) * mm, (TOP) * mm, '%s: %s' % (_(u'Podstawa zwolnienia z VAT'),' ' ))
+        self.pdf.setFont('DejaVu-Bold', 7)
+        self.pdf.drawString((LEFT - 95 ) * mm, (TOP-4) * mm, '%s' % (_(u'Zwolnienie ze względu na nieprzekroczenie limitu wartości sprzedaży w ubiegłym roku podatkowym (art. 113 ust. 1 i 9)')))
+        
+        self.pdf.setFont('DejaVu-Bold', 11)
+        self.pdf.drawString((LEFT - 95 ) * mm, (TOP-14) * mm, '%s: %s' % (_(u'Do zapłaty'),currency(self.invoice.price, self.invoice.currency, self.invoice.currency_locale)))
+        
+        self.pdf.setFont('DejaVu-Bold', 9)
+        self.pdf.drawString((LEFT - 95 ) * mm, (TOP-20) * mm, '%s: %s' % (_(u'Słownie'),self.invoice.specific_symbol))
+        
+        
         path = self.pdf.beginPath()
         path.moveTo((LEFT - 80) * mm, (TOP) * mm - height)
         path.lineTo((LEFT - 20) * mm, (TOP) * mm - height)
@@ -471,8 +490,8 @@ class SimpleInvoice(BaseInvoice):
         path.lineTo((LEFT + self.line_width) * mm, (TOP) * mm - height)
         self.pdf.drawPath(path, True, True)
 
-        self.pdf.drawString((LEFT -70) * mm, (TOP - 5) * mm - height, '%s' % (_(u'podpis kupującego')))
-        self.pdf.drawString((LEFT + 10) * mm, (TOP - 5) * mm - height, '%s' % (_(u'podpis sprzedawcy')))
+        self.pdf.drawString((LEFT -65) * mm, (TOP - 5) * mm - height, '%s' % (_(u'podpis kupującego')))
+        self.pdf.drawString((LEFT + 16) * mm, (TOP - 5) * mm - height, '%s' % (_(u'podpis sprzedawcy')))
 
     def _drawQR(self, TOP, LEFT, size=130.0):
         if self.qr_builder:
@@ -497,7 +516,7 @@ class SimpleInvoice(BaseInvoice):
         elif self.invoice.date and not self.invoice.use_tax:
             items.append((LEFT * mm, '%s: %s' % (_(u'Data wystawienia'), format_date(self.invoice.date, locale=lang))))
         if self.invoice.payback:
-            items.append((LEFT * mm, '%s: %s' % (_(u'Due date'), format_date(self.invoice.payback, locale=lang))))
+            items.append((LEFT * mm, '%s: %s' % (_(u'Data wykonania usługi'), format_date(self.invoice.payback, locale=lang))))
         if self.invoice.taxable_date:
             items.append((LEFT * mm, '%s: %s' % (_(u'Taxable date'), format_date(self.invoice.taxable_date, locale=lang))))
 
