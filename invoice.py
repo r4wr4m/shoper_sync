@@ -59,12 +59,13 @@ client = Client(clientname,
     address=order_info['billing_address']['street1']+'\n'+order_info['billing_address']['street2'], 
     city=order_info['billing_address']['city'], 
     zip_code=order_info['billing_address']['postcode'],
+
     #phone=order_info['billing_address']['phone'],
     #email=order_info['email'], 
     bank_name='TestBank', 
     bank_account='TestBankAccount', 
     bank_code='PL',
-    note='TestNote\nTestNote', 
+    note='NIP: ' + order_info['billing_address']['nip'], 
     logo_filename='', 
     vat_note='TestVatNote')
 
