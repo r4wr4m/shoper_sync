@@ -1183,4 +1183,5 @@ def inwords(price):
 
     big=int(price)
     small=int(round(price-int(price),2)*100)
-    return '{} {} {} {}'.format(number2word(big),currency(big,True),number2word(small),currency(small,False))
+    #return '{} {} {} {}'.format(number2word(big),currency(big,True),number2word(small),currency(small,False))
+    return '{} {} {}'.format(number2word(big),currency(big,True),str(small)+'/100')
