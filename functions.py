@@ -659,6 +659,8 @@ def get_order_info(page,token,order_id): #returns order info
                     'street2':j['list'][0]['billing_address']['street2'],
                     'country':j['list'][0]['billing_address']['country'],
                     'phone':j['list'][0]['billing_address']['phone'],
+                    'nip':j['list'][0]['billing_address']['tax_identification_number'],
+                    
                     }
                 }
         return info
