@@ -219,7 +219,7 @@ class SimpleInvoice(BaseInvoice):
         frame = Frame((left - 3) * mm, (top - 29) * mm, width*mm, height*mm)
         header = ParagraphStyle('header', fontName='DejaVu', fontSize=12, leading=15)
         default = ParagraphStyle('default', fontName='DejaVu', fontSize=8, leading=8.5)
-        small = ParagraphStyle('small', parent=default, fontSize=6, leading=6)
+        small = ParagraphStyle('small', parent=default, fontSize=8, leading=6)
         story = [
             Paragraph(header_string, header),
             Paragraph("<br/>".join(address._get_address_lines()), default),
