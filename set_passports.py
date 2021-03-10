@@ -41,8 +41,11 @@ start = time.time()
 #Read file with product names and passports
 table = read_rows(filename)
 for row in table: #row = [product_name,passport]
-	product=name_dict[row[0]]
-	set_passport(page[0],page[3],product,row[1],change)
-
+    product=name_dict[row[0]]
+    if len(row) == 1:
+        set_passport(page[0],page[3],product,'',change)
+    else:
+        set_passport(page[0],page[3],product,row[1],change)
+        
 print(Fore.GREEN+'[+] Done')
 print('###################\nDone in {} seconds.'.format(round(time.time()-start,3)))
