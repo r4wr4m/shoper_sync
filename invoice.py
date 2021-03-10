@@ -85,7 +85,8 @@ invoice.date = invoice_date
 invoice.payback = shipment_date
 for product in ordered_products:
     invoice.add_item(Item(product['quantity'], product['price'], description=product['name'], unit=product['unit'], tax=Decimal(product['tax_value'])))
-invoice.add_item(Item(1, order_info['shipping_cost'], description='Dostawa ({})'.format(order_info['shipping_name']), unit='', tax=Decimal(order_info['shipping_tax_value'])))
+if order_info['shipping_cost'] != '0.00':
+    invoice.add_item(Item(1, order_info['shipping_cost'], description='Dostawa ({})'.format(order_info['shipping_name']), unit='', tax=Decimal(order_info['shipping_tax_value'])))
 invoice.specific_symbol=inwords(invoice.price)
 
 pdf = SimpleInvoice(invoice)
