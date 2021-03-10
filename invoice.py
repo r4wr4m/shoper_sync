@@ -4,14 +4,14 @@ from InvoiceGenerator.pdf import SimpleInvoice
 from decimal import Decimal
 import datetime
 
-if len(sys.argv)==7:
+if len(sys.argv)==8:
     domain=sys.argv[1]
     order_number=sys.argv[2]
     invoice_number=sys.argv[3]
-    sys.argv[4]
     invoice_date = datetime.datetime.strptime(sys.argv[4], '%d-%m-%Y')
     shipment_date = datetime.datetime.strptime(sys.argv[5], '%d-%m-%Y')
-    filename=sys.argv[6]
+    paid = sys.argv[6]
+    filename=sys.argv[7]
 else:
     print(Fore.RED+'[i] Usage:\n\t{} domain order_number invoice_number invoice_date shipment_date filename'.format(sys.argv[0]))
     sys.exit(0)
@@ -73,7 +73,13 @@ invoice = Invoice(client, provider, creator)
 invoice.currency = 'zł'
 invoice.currency_locale = 'pl_PL.UTF-8'
 invoice.number = invoice_number
-invoice.variable_symbol=order_info['payment_name']
+#invoice.variable_symbol=order_info['payment_name']
+if paid=='tak':
+    invoice.variable_symbol='przedpłata'
+else:
+    invoice.variable_symbol='pobranie'
+
+
 #invoice.date = datetime.datetime.now()
 invoice.date = invoice_date
 invoice.payback = shipment_date
