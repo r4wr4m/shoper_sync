@@ -109,10 +109,13 @@ while True:
         invoice_id = input('Podaj numer faktury\n=>')
         invoice_date = get_date('Podaj datę wystawienia faktury w formacie dd-mm-yyyy\n=>')
         shipment_date = get_date('Podaj datę wykonania usługi w formacie dd-mm-yyyy\n=>')
+        paid = ''
+        while paid!='tak' and paid!="nie":
+            paid = input('Czy zamówienie jest opłacone? (tak/nie)\n=>')
         file = input('Podaj nazwę pliku, do którego zostanie zapisana faktura\n(bez rozszerzenia pliku)\n=>')
         print("=======================================")
-        print(cmd + domain + ' ' + order_id + ' ' + invoice_id + ' ' + invoice_date + ' ' + shipment_date + ' ' + file + '.pdf')
-        os.system(cmd + domain + ' ' + order_id + ' ' + invoice_id + ' ' + invoice_date + ' ' + shipment_date + ' ' + file + '.pdf')    
+        print(cmd + domain + ' ' + order_id + ' ' + invoice_id + ' ' + invoice_date + ' ' + shipment_date + ' '+ paid + ' ' + file + '.pdf')
+        os.system(cmd + domain + ' ' + order_id + ' ' + invoice_id + ' ' + invoice_date + ' ' + shipment_date + ' ' + paid + ' ' + file + '.pdf')    
     if choice == '5':
         cmd += ' install_polish_invoice.py'
         print("=======================================")
