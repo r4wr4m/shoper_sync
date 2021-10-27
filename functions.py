@@ -789,7 +789,28 @@ def get_payment_name(page,token,payment_id): #returns shipping name
     else:
         print(Fore.RED+'[!] Payment id {} not found!' + str(payment_id))
         sys.exit(1)
-
+        
+def get_order_status(page,token): #returns orders status dictionary
+    headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
+    try:
+        text = requests.get('https://'+page+'/webapi/rest/statuses/?limit=50',headers=headers,proxies=proxies,verify=verify).text
+    except Exception as e:
+        print(Fore.RED+'[!] Connection error: ' + str(e))
+        sys.exit(1)
+    order_status_dictionary={}
+    try:
+        j = json.loads(text)
+    except:
+        print(Fore.RED+'[-] Error parsing JSON (pages info)')
+        sys.exit(1)
+    if len(j['list'])>0:
+        for status in j['list']:
+            order_status_dictionary[status['translations']['pl_PL']['status_id']]=status['translations']['pl_PL']['name']
+    else:
+        print(Fore.RED+'[!] Order statuses not found!')
+        sys.exit(1)
+    return order_status_dictionary
+    
 def get_orders(page,token,date_from='',date_to=''): #returns order info
     print(Fore.GREEN+'[+] Downloading orders information from '+ page)
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
@@ -806,12 +827,13 @@ def get_orders(page,token,date_from='',date_to=''): #returns order info
     except:
         print(Fore.RED+'[-] Error parsing JSON (pages info)')
         sys.exit(1)
+    order_status_dictionary = get_order_status(page,token)
 
     print(Fore.GREEN+'[+] ' + count + ' orders found.')
     #Downloading orders info
     requests_count=int(pages)
     orders=[]
-
+    
     for i in range(1,requests_count+1):
         print('[i] {}\t{}/{} '.format(page,i,requests_count))
         if i != 0: #Page 0 returns the same results as page 1 
@@ -839,6 +861,10 @@ def get_orders(page,token,date_from='',date_to=''): #returns order info
                         'street1':order['delivery_address']['street1'],
                         'street2':order['delivery_address']['street2'],
                         'country':order['delivery_address']['country'],
+                        'status_date':order['status_date'],
+                        'confirm_date':order['confirm_date'],
+                        'delivery_date':order['delivery_date'],
+                        'status':order_status_dictionary[order['status_id']],
                         })
             else:
                 print(Fore.RED+'[!] Orders not found in ' + page)
@@ -1072,6 +1098,7 @@ def get_auctions(page,token): #returns ordered products
     return auctions
 
 #REFRESHING ALLEGRO TOKENS
+'''
 if pages[0][8]!='':
     if pages[0][8]-datetime.datetime.now().timestamp() < 120: #Token expires in 120 seconds
         print(Fore.RED+'[!] Token for ' + pages[0][0] + ' expired! (Expires: ' + datetime.datetime.fromtimestamp(pages[0][8]).strftime('%d-%m-%Y %H:%M:%S') + ')')
@@ -1080,7 +1107,7 @@ if pages[1][8]!='':
     if pages[1][8]-datetime.datetime.now().timestamp() < 120: #Token expires in 120 seconds
         print(Fore.RED+'[!] Token for ' + pages[1][0] + ' expired! (Expires: ' + datetime.datetime.fromtimestamp(pages[1][8]).strftime('%d-%m-%Y %H:%M:%S') + ')')
         allegro_refresh_token(pages[1])
-
+'''
 #############################################
 ################ EXCEL STUFF ################
 #############################################
