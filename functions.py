@@ -582,7 +582,7 @@ def change_stock(past_products,name_dict,product_name,page,old_value,new_value,c
 def set_passport(page,token,product,passport,change): #returns ordered products
     headers = {'User-Agent': ua,'Authorization':'Bearer '+token}
 
-    print(Fore.GREEN+'[+] Setting passport in {} - {} ("{}" => "{}")'.format(page,product['name'],product['passport'],passport),end='')
+    print(Fore.GREEN+'[+] Setting passport in {} - {} ("{}" => "{}")'.format(page,product['name'],product['passport'],str(passport).replace('.0','')),end='')
 
     #updating passport
     text=''
@@ -590,8 +590,7 @@ def set_passport(page,token,product,passport,change): #returns ordered products
         if change:
             for i in range(3):
                 try: 
-                    data = '{"attributes": {"'+product['attribute_category_id']+'": {"'+product['passport_attribute_id']+'": "'+passport+'"}}}'
-                    data = '{"attributes": {"'+product['passport_attribute_id']+'": "'+passport+'"}}'
+                    data = '{"attributes": {"'+product['passport_attribute_id']+'": "'+str(passport).replace('.0','')+'"}}'
                     url = 'https://'+page+'/webapi/rest/products/'+str(product['id'])
                     r = requests.put(url,data=data,headers=headers,proxies=proxies,verify=verify,timeout=timeout)
                 except Exception as e:
