@@ -1159,7 +1159,7 @@ def send_mail(mail_creds,to,text):
 def changes_filename(domain=''):
     if not os.path.isdir('logs'):
         os.mkdir('logs')
-    filename = datetime.datetime.now().strftime('%Y%m%d_%H%M%S_changes')
+    filename = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S_changes')
     if domain!='':
         filename+='_'+domain
     filename = 'logs/' + filename + '.txt'
